@@ -28,7 +28,7 @@ jobs:
       run: chmod +x ./gradlew
       working-directory: ${{ env.WORKING_DIR }}
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+      run: ./gradlew build
       with:
         arguments: clean test
       working-directory: ${{ env.WORKING_DIR }}
