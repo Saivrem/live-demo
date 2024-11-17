@@ -5,7 +5,7 @@ spring:
         name: "icedata-v2"
     jpa:
         show-sql: true
-        open-in-view: false # disables lazy loading outside of Transaction
+        open-in-view: true # if false disables lazy loading outside of Transaction
         hibernate:
             dialect: MySQL8Dialect
             ddl-auto: update
