@@ -13,7 +13,7 @@ env:
   WORKING_DIR: './icedata-v2/'
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
