@@ -12,6 +12,7 @@ permissions:
 env:
     WORKING_DIR: './icedata-v2/'
 
+
 jobs:
   build:
 
@@ -25,8 +26,10 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     - name: Run chmod to make gradlew executable
-      run: cd ${{ env.WORKING_DIR }} && chmod +x ./gradlew
+      run: chmod +x ./gradlew
+      working-directory: ${{ env.WORKING_DIR }}
     - name: Build with Gradle
-      run: cd ${{ env.WORKING_DIR }} && ./gradlew build
+      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       with:
         arguments: clean test
+      working-directory: ${{ env.WORKING_DIR }}
