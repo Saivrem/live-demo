@@ -1,0 +1,32 @@
+spring:
+    main:
+        banner-mode: 'off'
+    application:
+        name: "icedata-v2"
+    jpa:
+        show-sql: false
+        open-in-view: false # disables lazy loading outside of Transaction
+        hibernate:
+            dialect: MySQL8Dialect
+            ddl-auto: update
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        username: ${DB_USER}
+        password: ${DB_PASS}
+        url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_SCHEMA}?${DB_PARAMS}
+
+server:
+    port: 8086
+
+logging:
+    level:
+        root: info
+
+icedata-v2:
+    cron:  "0 0 10 * * ?" # every day at 10 AM
+    base-url: "https://data.icecat.biz/export/freexml/"
+    suppliers-list-file: "refs/SuppliersList.xml.gz"
+    suppliers-mapping-file: "EN/supplier_mapping.xml"
+    language-list-file: "refs/LanguageList.xml.gz"
+    service-username: ${ICECAT_USER}
+    service-password: ${ICECAT_PASS}
