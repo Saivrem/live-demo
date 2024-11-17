@@ -25,10 +25,8 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     - name: Run chmod to make gradlew executable
-      run: chmod +x ./gradlew
-      working-directory: ${{ env.WORKING_DIR }}
+      run: cd ${{ env.WORKING_DIR }} && chmod +x ./gradlew
     - name: Build with Gradle
-      run: ./gradlew build
+      run: cd ${{ env.WORKING_DIR }} && ./gradlew build
       with:
         arguments: clean test
-      working-directory: ${{ env.WORKING_DIR }}
