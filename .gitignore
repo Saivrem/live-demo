@@ -4,6 +4,8 @@ init_db.sql
 application-local.yml
 tmp
 generated*
+.DS_Store
+
 
 icedata-v2/.gradle
 build/
