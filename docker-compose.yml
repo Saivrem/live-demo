@@ -39,6 +39,8 @@ services:
   launchpad:
     image: php:7.4-apache
     restart: always
+    env_file:
+        - .env
     ports:
       - "80:80"
     volumes:
