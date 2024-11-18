@@ -19,7 +19,8 @@ server:
     port: 8086
 
 icedata-v2:
-    cron: "-" # every minute
+    cron: "-" # disabled
+    batch-size: 1000 # how many entries should be saved into DB on update
     base-url: "mocked-in-tests"
     suppliers-list-file: "refs/SuppliersList.xml.gz"
     suppliers-mapping-file: "EN/supplier_mapping.xml"

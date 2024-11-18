@@ -33,6 +33,7 @@ logging:
 
 icedata-v2:
     cron:  "0 0 10 * * ?" # every day at 10 AM
+    batch-size: 1000 # how many entries should be saved into DB on update
     base-url: "https://data.icecat.biz/export/freexml/"
     suppliers-list-file: "refs/SuppliersList.xml.gz"
     suppliers-mapping-file: "EN/supplier_mapping.xml"

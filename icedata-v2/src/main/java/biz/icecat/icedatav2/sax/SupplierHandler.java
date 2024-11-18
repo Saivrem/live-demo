@@ -2,6 +2,7 @@ package biz.icecat.icedatav2.sax;
 
 import biz.icecat.icedatav2.persistence.entity.SupplierEntity;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -9,13 +10,18 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 // TODO Very POC implementation, refactor!
 @Slf4j
+@RequiredArgsConstructor
 public class SupplierHandler extends DefaultHandler {
 
-    @Getter
+    private final int batchSize;
+    private final Consumer<List<SupplierEntity>> consumer;
     private final List<SupplierEntity> suppliers = new ArrayList<>();
+    @Getter
+    private int totalSuppliers = 0;
     private SupplierEntity currentSupplier;
 
     @Override
@@ -40,6 +46,25 @@ public class SupplierHandler extends DefaultHandler {
         if (qName.equalsIgnoreCase("Supplier") && currentSupplier != null) {
             suppliers.add(currentSupplier);
             currentSupplier = null;
+
+            if (suppliers.size() == batchSize) {
+                flush();
+            }
         }
+    }
+
+    @Override
+    public void endDocument() throws SAXException {
+        if (!suppliers.isEmpty()) {
+            flush();
+        }
+    }
+
+    private void flush() {
+        totalSuppliers += suppliers.size();
+
+        consumer.accept(suppliers);
+        log.debug("{}: processed {} entries", getClass().getSimpleName(), suppliers.size());
+        suppliers.clear();
     }
 }
