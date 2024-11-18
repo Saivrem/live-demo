@@ -38,6 +38,7 @@ services:
 
   launchpad:
     image: php:7.4-apache
+    container_name: "icedata-v2-web"
     restart: always
     env_file:
         - .env
