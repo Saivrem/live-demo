@@ -15,6 +15,15 @@ spring:
         password: ${DB_PASS}
         url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_SCHEMA}?${DB_PARAMS}
 
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: health
+
 server:
     port: 8086
 

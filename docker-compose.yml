@@ -1,38 +1,53 @@
 services:
-    database:
-        image: mysql:8.4.3
-        container_name: "icedata-v2-db"
-        restart: always
-        env_file:
-            - .env
-        ports:
-            - "3306:3306"
-        volumes:
-            - icedata-v2-mysql-volume:/var/lib/mysql
-            # init_db.sql is not necessary if DB is preconfigured and user is created
-            # however, for the local development this script might be useful
-            # - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
-        healthcheck:
-          test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-          interval: 10s
-          timeout: 5s
-          retries: 5
-          start_period: 30s
-    java:
-        build:
-            dockerfile: springDockerfile
-            context: .
-        container_name: "icedata-v2-java"
-        restart: always
-        env_file:
-          - .env
-        ports:
-            - "8086:8086"
-        depends_on:
-          database:
-            condition: service_healthy
-        links:
-            - database
+  database:
+    image: mysql:8.4.3
+    container_name: "icedata-v2-db"
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - icedata-v2-mysql-volume:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  java:
+    build:
+      dockerfile: springDockerfile
+      context: .
+    container_name: "icedata-v2-java"
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8086:8086"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:8086/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  launchpad:
+    image: php:7.4-apache
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./launchpad:/var/www/html
+    depends_on:
+      java:
+        condition: service_healthy
+      database:
+        condition: service_healthy
 
 volumes:
-    icedata-v2-mysql-volume:
+  icedata-v2-mysql-volume:
