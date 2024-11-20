@@ -17,13 +17,15 @@ public class SpringDataSourcePropertiesOverrider implements PropertiesOverrider 
 
     @Override
     public void override(Object propertiesBean) {
-        DataSourceProperties properties = (DataSourceProperties) propertiesBean;
         MySqlContainer mySqlContainer = ResourceRegistry.findByType(MySqlContainer.class);
-        if (mySqlContainer != null) {
-            String connectionString = mySqlContainer.getMySqlConnectionString();
-            log.info("Overriding Datasource URL. Previous value: {}, current value {}.", properties.getUrl(), connectionString);
-            properties.setUrl(connectionString);
-            mySqlContainer.createUser(properties.getUsername(), properties.getPassword());
+        if (mySqlContainer == null) {
+            return;
         }
+
+        DataSourceProperties properties = (DataSourceProperties) propertiesBean;
+        mySqlContainer.createUser(properties.getUsername(), properties.getPassword());
+        String connectionString = mySqlContainer.getMySqlConnectionString();
+        log.info("Overriding Datasource URL. Previous value: {}, current value {}.", properties.getUrl(), connectionString);
+        properties.setUrl(connectionString);
     }
 }

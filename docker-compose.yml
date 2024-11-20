@@ -11,7 +11,7 @@ services:
       - icedata-v2-mysql-volume:/var/lib/mysql
       # init_db.sql is not necessary if DB is preconfigured and user is created
       # however, for the local development this script might be useful
-      # - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$MYSQL_ROOT_PASSWORD"]
       interval: 10s

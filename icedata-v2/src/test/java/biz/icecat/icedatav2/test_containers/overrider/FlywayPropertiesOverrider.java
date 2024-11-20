@@ -16,13 +16,15 @@ public class FlywayPropertiesOverrider implements PropertiesOverrider {
 
     @Override
     public void override(Object propertiesBean) {
-        FlywayProperties properties = (FlywayProperties) propertiesBean;
         MySqlContainer mySqlContainer = ResourceRegistry.findByType(MySqlContainer.class);
-        if (mySqlContainer != null) {
-            String connectionString = mySqlContainer.getMySqlConnectionString();
-            log.info("Overriding Datasource URL. Previous value: {}, current value {}.", properties.getUrl(), connectionString);
-            properties.setUrl(connectionString);
-            mySqlContainer.createUser(properties.getUser(), properties.getPassword());
+        if (mySqlContainer == null) {
+            return;
         }
+
+        FlywayProperties flywayProperties = (FlywayProperties) propertiesBean;
+        mySqlContainer.createUser(flywayProperties.getUser(), flywayProperties.getPassword());
+        String connectionString = mySqlContainer.getMySqlConnectionString();
+        log.info("Overriding Flyway URL. Previous value: {}, current value: {}.", flywayProperties.getUrl(), connectionString);
+        flywayProperties.setUrl(connectionString);
     }
 }
