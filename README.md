@@ -25,6 +25,8 @@ export DB_SCHEMA="shop_db"                          # Database schema (PostgreSQ
 export DB_PORT="5432"                               # Port number for the database connection (default for PostgreSQL is 5432)
 export DB_HOST="localhost"                          # Host address of the database
 export DB_PARAMS="?sslmode=disable&timezone=UTC"    # Connection parameters (e.g., SSL mode, timezone)
+export FLYWAY_USER='flyway'                         # User for Flyway migration scripts
+export FLYWAY_PASSWORD='flyway'                     # Password for Flyway user
 
 # ---------- MySQL Configuration ----------
 export MYSQL_ROOT_PASSWORD="rootPass456"            # Root password for MySQL, needed during initial setup

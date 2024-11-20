@@ -8,13 +8,20 @@ spring:
         open-in-view: true # if false disables lazy loading outside of Transaction
         hibernate:
             dialect: MySQL8Dialect
-            ddl-auto: update
+            ddl-auto: none
         database-platform: org.hibernate.dialect.MySQLDialect
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         username: icecat
         password: icecat
         url: mocked-in-tests
+    flyway:
+      enabled: true
+      user: overridden-in-tests
+      password: overridden-in-tests
+      locations: classpath:db/migration
+      baseline-on-migrate: true
+
 server:
     port: 8086
 
