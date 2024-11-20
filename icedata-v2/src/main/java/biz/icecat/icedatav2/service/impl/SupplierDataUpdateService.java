@@ -6,15 +6,14 @@ import biz.icecat.icedatav2.sax.SupplierHandler;
 import biz.icecat.icedatav2.service.DataUpdateService;
 import biz.icecat.icedatav2.utils.FileUtils;
 import biz.icecat.icedatav2.utils.LoadingUtils;
+import biz.icecat.icedatav2.utils.SaxUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,16 +34,14 @@ public class SupplierDataUpdateService implements DataUpdateService {
     @Override
     public int update() {
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            SAXParser saxParser = factory.newSAXParser();
             SupplierHandler handler = new SupplierHandler(batchSize, repository::saveAll);
+            SAXParser saxParser = SaxUtils.getParser();
 
             Path suppliersList = getSuppliersList();
-
             saxParser.parse(Files.newInputStream(suppliersList), handler);
 
-            return handler.getTotalSuppliers();
-        } catch (ParserConfigurationException | SAXException saxEx) {
+            return handler.getProcessedSuppliersNumber();
+        } catch (SAXException saxEx) {
             log.warn("Failed to configure parser for {}", this.getClass().getSimpleName());
         } catch (IOException e) {
             log.warn("Failed to process suppliers list");
