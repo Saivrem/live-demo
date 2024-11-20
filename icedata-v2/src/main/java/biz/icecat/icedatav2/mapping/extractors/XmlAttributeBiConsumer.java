@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.service.extractors;
+package biz.icecat.icedatav2.mapping.extractors;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;

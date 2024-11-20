@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.service.converters;
+package biz.icecat.icedatav2.mapping.converters;
 
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;

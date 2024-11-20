@@ -1,7 +1,7 @@
 package biz.icecat.icedatav2.utils;
 
 import biz.icecat.icedatav2.models.entity.SupplierEntity;
-import biz.icecat.icedatav2.service.extractors.XmlAttributeBiConsumer;
+import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
 import lombok.experimental.UtilityClass;
 
 import java.util.List;

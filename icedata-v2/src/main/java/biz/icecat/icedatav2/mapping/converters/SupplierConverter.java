@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.service.converters;
+package biz.icecat.icedatav2.mapping.converters;
 
 import biz.icecat.icedatav2.models.api.ApiSupplier;
 import biz.icecat.icedatav2.models.entity.SupplierEntity;
