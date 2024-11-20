@@ -19,8 +19,12 @@ spring:
       enabled: true
       user: flyway
       password: flyway
-      locations: classpath:db/migration
+      connect-retries: 3
       baseline-on-migrate: true
+
+logging:
+    level:
+        org.flywaydb: DEBUG
 
 server:
     port: 8086
