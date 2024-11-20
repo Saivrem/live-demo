@@ -35,7 +35,8 @@ public class MySqlContainer extends TestDockerContainer<MySqlContainer> {
     }
 
     private MySqlContainer(Class<?> testClass) {
-        super(testClass, "mysql:8.4.3", "mysql-");
+        // TODO newer version of mysql seem to drop native password, figure better approach later
+        super(testClass, "mysql:8.0.24", "mysql-");
         this.port = TestUtils.randomPort();
         withFixedExposedPort(this.port, 3306);
         withCreateContainerCmdModifier(cmd -> cmd.withAttachStderr(true).withAttachStdout(true));
@@ -153,6 +154,8 @@ public class MySqlContainer extends TestDockerContainer<MySqlContainer> {
                         .awaitStarted()
                         .awaitCompletion();
                 String stdoutString = stdout.toString();
+                log.debug(stdoutString);
+                log.debug(stderr.toString());
                 if (stdoutString.contains(dbName)) {
                     try (Connection ignored = DriverManager.getConnection(getMySqlConnectionString(), username, password)) {
                         log.info("MySQL database {} is accepting connections from user {}.", dbName, username);
