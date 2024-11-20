@@ -1,8 +1,8 @@
 package biz.icecat.icedatav2.service.impl;
 
 import biz.icecat.icedatav2.models.api.ApiSupplier;
-import biz.icecat.icedatav2.persistence.entity.SupplierEntity;
-import biz.icecat.icedatav2.persistence.repository.SupplierRepository;
+import biz.icecat.icedatav2.models.entity.SupplierEntity;
+import biz.icecat.icedatav2.repository.SupplierRepository;
 import biz.icecat.icedatav2.service.SuppliersService;
 import biz.icecat.icedatav2.service.converters.SupplierConverter;
 import jakarta.transaction.Transactional;

@@ -1,7 +1,7 @@
 package biz.icecat.icedatav2.service.converters;
 
 import biz.icecat.icedatav2.models.api.ApiSupplier;
-import biz.icecat.icedatav2.persistence.entity.SupplierEntity;
+import biz.icecat.icedatav2.models.entity.SupplierEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

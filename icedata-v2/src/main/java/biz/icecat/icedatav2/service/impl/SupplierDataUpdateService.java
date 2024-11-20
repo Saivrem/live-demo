@@ -1,7 +1,7 @@
 package biz.icecat.icedatav2.service.impl;
 
 import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
-import biz.icecat.icedatav2.persistence.repository.SupplierRepository;
+import biz.icecat.icedatav2.repository.SupplierRepository;
 import biz.icecat.icedatav2.sax.SupplierHandler;
 import biz.icecat.icedatav2.service.DataUpdateService;
 import biz.icecat.icedatav2.utils.FileUtils;
@@ -25,10 +25,10 @@ import static biz.icecat.icedatav2.utils.FileUtils.TEMP_DIR;
 @RequiredArgsConstructor
 public class SupplierDataUpdateService implements DataUpdateService {
 
-    @Value("${icedata-v2.batch-size}")
-    private Integer batchSize;
     private final ApplicationProperties properties;
     private final SupplierRepository repository;
+    @Value("${icedata-v2.batch-size}")
+    private Integer batchSize;
 
     // TODO think about whole flow, logging and handling
     @Override

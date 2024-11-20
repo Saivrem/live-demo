@@ -1,7 +1,7 @@
 package biz.icecat.icedatav2.service.converters;
 
 import biz.icecat.icedatav2.models.api.ApiSupplierMapping;
-import biz.icecat.icedatav2.persistence.entity.SupplierMappingEntity;
+import biz.icecat.icedatav2.models.entity.SupplierMappingEntity;
 import org.springframework.stereotype.Component;
 
 @Component

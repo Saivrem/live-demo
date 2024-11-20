@@ -1,6 +1,6 @@
 package biz.icecat.icedatav2.sax;
 
-import biz.icecat.icedatav2.persistence.entity.SupplierEntity;
+import biz.icecat.icedatav2.models.entity.SupplierEntity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static biz.icecat.icedatav2.utils.FieldUtils.*;
+import static biz.icecat.icedatav2.utils.FieldUtils.SUPPLIER_ATTRIBUTES_PROCESSOR;
 
 // TODO Very POC implementation, refactor!
 @Slf4j
@@ -56,7 +56,8 @@ public class SupplierHandler extends DefaultHandler {
 
     /**
      * Populate fields of passed Supplier entity from attributes
-     * @param supplier {@link SupplierEntity} current supplier entity
+     *
+     * @param supplier   {@link SupplierEntity} current supplier entity
      * @param attributes {@link Attributes} of current XML element
      */
     private void populateFields(SupplierEntity supplier, Attributes attributes) {

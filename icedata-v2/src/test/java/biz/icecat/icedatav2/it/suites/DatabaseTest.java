@@ -1,7 +1,7 @@
 package biz.icecat.icedatav2.it.suites;
 
 import biz.icecat.icedatav2.it.BaseIT;
-import biz.icecat.icedatav2.persistence.repository.SupplierRepository;
+import biz.icecat.icedatav2.repository.SupplierRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;

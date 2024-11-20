@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.persistence.entity;
+package biz.icecat.icedatav2.models.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

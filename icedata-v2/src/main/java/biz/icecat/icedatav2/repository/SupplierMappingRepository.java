@@ -1,6 +1,6 @@
-package biz.icecat.icedatav2.persistence.repository;
+package biz.icecat.icedatav2.repository;
 
-import biz.icecat.icedatav2.persistence.entity.SupplierMappingEntity;
+import biz.icecat.icedatav2.models.entity.SupplierMappingEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
