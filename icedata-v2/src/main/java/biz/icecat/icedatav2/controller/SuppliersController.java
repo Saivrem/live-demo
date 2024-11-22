@@ -12,7 +12,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("api/v2/suppliers")
+@RequestMapping("suppliers")
 @RequiredArgsConstructor
 public class SuppliersController {
 

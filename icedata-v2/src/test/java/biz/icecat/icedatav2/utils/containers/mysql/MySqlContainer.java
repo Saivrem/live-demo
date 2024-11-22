@@ -1,6 +1,6 @@
-package biz.icecat.icedatav2.test_containers.mysql;
+package biz.icecat.icedatav2.utils.containers.mysql;
 
-import biz.icecat.icedatav2.test_containers.TestDockerContainer;
+import biz.icecat.icedatav2.utils.containers.TestDockerContainer;
 import biz.icecat.icedatav2.utils.TestUtils;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;

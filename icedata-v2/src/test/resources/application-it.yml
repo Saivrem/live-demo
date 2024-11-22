@@ -29,12 +29,16 @@ logging:
         org.flywaydb: DEBUG
 
 server:
+    servlet:
+        context-path: "/icedata/api/v2"
     port: 8086
 
 icedata-v2:
     cron: "-" # disabled
     batch-size: 1000 # how many entries should be saved into DB on update
-    base-url: "mocked-in-tests"
+    icecat-base-url: "overridden-in-tests"
+    icedata-base-url: "http://localhost"
+    api-path: ${server.servlet.context-path}
     suppliers-list-file: "refs/SuppliersList.xml.gz"
     suppliers-mapping-file: "EN/supplier_mapping.xml"
     language-list-file: "refs/LanguageList.xml.gz"

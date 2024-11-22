@@ -31,6 +31,8 @@ management:
         include: health
 
 server:
+    servlet:
+        context-path: "/icedata/api/v2"
     port: 8086
 
 logging:
@@ -40,7 +42,9 @@ logging:
 icedata-v2:
     cron:  "0 0 10 * * ?" # every day at 10 AM
     batch-size: 1000 # how many entries should be saved into DB on update
-    base-url: "https://data.icecat.biz/export/freexml/"
+    icecat-base-url: "https://data.icecat.biz/export/freexml/"
+    icedata-base-url: "http://localhost" # todo
+    api-path: ${server.servlet.context-path}
     suppliers-list-file: "refs/SuppliersList.xml.gz"
     suppliers-mapping-file: "EN/supplier_mapping.xml"
     language-list-file: "refs/LanguageList.xml.gz"

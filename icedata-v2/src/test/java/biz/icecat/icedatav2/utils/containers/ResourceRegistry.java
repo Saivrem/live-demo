@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.test_containers;
+package biz.icecat.icedatav2.utils.containers;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;

@@ -1,0 +1,7 @@
+{
+  "supplierId": 65535,
+  "supplierName": "MyBrand",
+  "isSponsor": 1,
+  "brandLogo": "https://localhost",
+  "supplierMappings": []
+}

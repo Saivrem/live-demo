@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.test_containers;
+package biz.icecat.icedatav2.utils.containers;
 
 import com.github.dockerjava.api.exception.DockerException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;

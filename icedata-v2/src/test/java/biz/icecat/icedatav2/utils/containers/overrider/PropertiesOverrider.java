@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.test_containers.overrider;
+package biz.icecat.icedatav2.utils.containers.overrider;
 
 public interface PropertiesOverrider {
 

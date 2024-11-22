@@ -1,4 +1,4 @@
-package biz.icecat.icedatav2.test_containers.overrider;
+package biz.icecat.icedatav2.utils.containers.overrider;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -33,8 +33,6 @@ public class PropertiesOverridingPostProcessor implements BeanPostProcessor {
     public void setPropertiesOverriders(List<PropertiesOverrider> propertiesOverriders) {
         this.propertiesOverriders = propertiesOverriders;
         CollectionUtils.emptyIfNull(propertiesOverriders)
-                .forEach(propertiesOverrider -> {
-                    log.info("Loaded property overrider: {}", propertiesOverrider.getClass().getSimpleName());
-                });
+                .forEach(propertiesOverrider -> log.info("Loaded property overrider: {}", propertiesOverrider.getClass().getSimpleName()));
     }
 }

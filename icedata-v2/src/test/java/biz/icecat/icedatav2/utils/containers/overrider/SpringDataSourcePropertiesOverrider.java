@@ -1,7 +1,7 @@
-package biz.icecat.icedatav2.test_containers.overrider;
+package biz.icecat.icedatav2.utils.containers.overrider;
 
-import biz.icecat.icedatav2.test_containers.ResourceRegistry;
-import biz.icecat.icedatav2.test_containers.mysql.MySqlContainer;
+import biz.icecat.icedatav2.utils.containers.ResourceRegistry;
+import biz.icecat.icedatav2.utils.containers.mysql.MySqlContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;

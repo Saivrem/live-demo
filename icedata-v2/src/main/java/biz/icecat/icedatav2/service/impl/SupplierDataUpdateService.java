@@ -56,7 +56,7 @@ public class SupplierDataUpdateService implements DataUpdateService {
         Files.createDirectories(gzippedSuppliersList);
 
         LoadingUtils.authenticate(properties.getServiceUserName(), properties.getServicePassword());
-        LoadingUtils.downloadUrl(properties.getBaseUrl() + properties.getSuppliersListFile(), gzippedSuppliersList);
+        LoadingUtils.downloadUrl(properties.getIcecatBaseUrl() + properties.getSuppliersListFile(), gzippedSuppliersList);
 
         Path unzippedTempFile = Path.of(TEMP_DIR, "suppliers_list.xml");
         FileUtils.unGzip(gzippedSuppliersList, unzippedTempFile);

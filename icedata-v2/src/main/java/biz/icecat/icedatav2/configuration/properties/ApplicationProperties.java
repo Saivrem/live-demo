@@ -13,7 +13,11 @@ import org.springframework.validation.annotation.Validated;
 public class ApplicationProperties {
 
     @NotBlank
-    private String baseUrl;
+    private String icecatBaseUrl;
+    @NotBlank
+    private String icedataBaseUrl;
+    @NotBlank
+    private String apiPath;
     @NotBlank
     private String suppliersListFile;
     @NotBlank
