@@ -35,7 +35,7 @@ public class MySqlContainer extends TestDockerContainer<MySqlContainer> {
     }
 
     private MySqlContainer(Class<?> testClass) {
-        super(testClass, "mysql:8.0.24", "mysql-");
+        super(testClass, "mysql:8.4", "mysql-");
         port = TestUtils.randomPort();
         dbName = RandomStringUtils.randomAlphabetic(10).toLowerCase();
         this.withFixedExposedPort(port, 3306)
