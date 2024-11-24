@@ -1,5 +1,6 @@
 package biz.icecat.icedatav2.sax;
 
+import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
 import biz.icecat.icedatav2.models.entity.SupplierEntity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,14 +12,24 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-import static biz.icecat.icedatav2.utils.FieldUtils.SUPPLIER_ATTRIBUTES_PROCESSOR;
+import static biz.icecat.icedatav2.utils.FieldUtils.mapToIntOrZero;
+import static biz.icecat.icedatav2.utils.FieldUtils.mapToLong;
 
 // TODO Very POC implementation, refactor!
 @Slf4j
 @RequiredArgsConstructor
 public class SupplierHandler extends DefaultHandler {
+
     private static final String SUPPLIER = "Supplier";
+
+    private static final List<XmlAttributeBiConsumer<SupplierEntity, ?>> SUPPLIER_ATTRIBUTES_PROCESSOR = List.of(
+            new XmlAttributeBiConsumer<>("ID", SupplierEntity::setSupplierId, mapToLong),
+            new XmlAttributeBiConsumer<>("Name", SupplierEntity::setSupplierName, Function.identity()),
+            new XmlAttributeBiConsumer<>("LogoPic", SupplierEntity::setBrandLogo, Function.identity()),
+            new XmlAttributeBiConsumer<>("Sponsor", SupplierEntity::setIsSponsor, mapToIntOrZero)
+    );
 
     private final int batchSize;
     private final Consumer<List<SupplierEntity>> consumer;
