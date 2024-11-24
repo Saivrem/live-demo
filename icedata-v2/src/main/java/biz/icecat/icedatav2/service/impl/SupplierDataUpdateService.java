@@ -4,8 +4,6 @@ import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
 import biz.icecat.icedatav2.repository.SupplierRepository;
 import biz.icecat.icedatav2.sax.SupplierHandler;
 import biz.icecat.icedatav2.service.DataUpdateService;
-import biz.icecat.icedatav2.utils.FileUtils;
-import biz.icecat.icedatav2.utils.LoadingUtils;
 import biz.icecat.icedatav2.utils.SaxUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +16,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static biz.icecat.icedatav2.utils.FileUtils.TEMP_DIR;
+import static biz.icecat.icedatav2.utils.FileUtils.*;
+import static biz.icecat.icedatav2.utils.LoadingUtils.authenticate;
+import static biz.icecat.icedatav2.utils.LoadingUtils.downloadUrl;
+import static java.nio.file.Files.deleteIfExists;
 
 @Slf4j
 @Component
@@ -29,6 +30,8 @@ public class SupplierDataUpdateService implements DataUpdateService {
     private final SupplierRepository repository;
     @Value("${icedata-v2.batch-size}")
     private Integer batchSize;
+    @Value("${files.suppliers-list}")
+    private String suppliersList;
 
     // TODO think about whole flow, logging and handling
     @Override
@@ -51,16 +54,15 @@ public class SupplierDataUpdateService implements DataUpdateService {
     }
 
     private Path getSuppliersList() throws IOException {
-        Path gzippedSuppliersList = Path.of(TEMP_DIR, properties.getSuppliersListFile());
+        Path gzippedSuppliersList = Path.of(TEMP_DIR, suppliersList);
+        createTempFile(gzippedSuppliersList);
 
-        Files.createDirectories(gzippedSuppliersList);
-
-        LoadingUtils.authenticate(properties.getServiceUserName(), properties.getServicePassword());
-        LoadingUtils.downloadUrl(properties.getIcecatBaseUrl() + properties.getSuppliersListFile(), gzippedSuppliersList);
+        authenticate(properties.getServiceUserName(), properties.getServicePassword());
+        downloadUrl(properties.resolveIcecatLink(suppliersList), gzippedSuppliersList);
 
         Path unzippedTempFile = Path.of(TEMP_DIR, "suppliers_list.xml");
-        FileUtils.unGzip(gzippedSuppliersList, unzippedTempFile);
-        Files.deleteIfExists(gzippedSuppliersList);
+        unGzip(gzippedSuppliersList, unzippedTempFile);
+        deleteIfExists(gzippedSuppliersList);
 
         return unzippedTempFile;
     }

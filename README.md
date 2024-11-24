@@ -8,41 +8,8 @@ This project if a full representation of live-demo project. Codebase is split be
 ### Prerequisites
 
 #### Common Setup:
-- All components of this project share the same `.env` file, which is **not included** for security reasons. The project expects specific environment variables to be set. Below is a reference script that can be used to set up these values:
-
-```bash
-
-#!/bin/bash
-
-########################################
-#          Environment Setup           #
-########################################
-
-# ---------- Database Configuration ----------
-export DB_USER="db_user"                            # Username for the database
-export DB_PASS="superSecretPass123"                 # Password for the database user
-export DB_SCHEMA="shop_db"                          # Database schema (PostgreSQL) or database name (MySQL)
-export DB_PORT="5432"                               # Port number for the database connection (default for PostgreSQL is 5432)
-export DB_HOST="localhost"                          # Host address of the database
-export DB_PARAMS="?sslmode=disable&timezone=UTC"    # Connection parameters (e.g., SSL mode, timezone)
-export FLYWAY_USER='flyway'                         # User for Flyway migration scripts
-export FLYWAY_PASSWORD='flyway'                     # Password for Flyway user
-
-# ---------- MySQL Configuration ----------
-export MYSQL_ROOT_PASSWORD="rootPass456"            # Root password for MySQL, needed during initial setup
-
-# ---------- Icecat Shop User Configuration ----------
-export ICECAT_USER="shop_user"                      # Username for the Icecat shop service
-export ICECAT_PASS="shopUserPass789"                # Password for the Icecat shop service
-
-# ---------- Java Application Configuration ----------
-export JAVA_PORT="8080"                             # Port used by the Java Icedata service
-export JAVA_HOST="127.0.0.1"                        # Host address where the Icedata service is running
-
-########################################
-#         End of Configuration         #
-########################################      
-```
+- All components of this project share the same `.env` file, which is **not included** for security reasons. The project expects specific environment variables to be set. 
+  - see `env_setup.sh` for reference, it should be also used to set up variables in local env, however, I'd suggest to stick with `.env` file and compose 
 
 #### Database Requirements:
 - The target machine should have a **MySQL server** installed and properly configured.
@@ -52,16 +19,20 @@ export JAVA_HOST="127.0.0.1"                        # Host address where the Ice
 
 #### Backend Setup:
 - The backend is located in the `icedata-v2` package and relies on the environment variables specified in the common setup section above.
+- App configuration is split in several parts in `application.yml`: 
+  - general spring and other dependencies configs like `spring`, `management`, `server`
+  - app-specific config in same file `icedata-v2` part
+  - files to work with in `files` segment
 
 ### Local Development
 
 For local development, a `docker-compose` file is provided. The application can be started as a full system or by individual services.
 
-#### Running MySQL Server Only:
-To start only the MySQL service:
+#### Running only selected services
+To run only selected services via docker compose you need to use service name, e.g.
 ```bash
 
-docker compose up -d database
+docker compose up -d database java
 ```
 
 #### Full System Run:
@@ -75,9 +46,6 @@ This script will:
 2. Build the new one.
 3. Execute the `docker-compose` file.
 
-#### Full Cleanup:
-To clean up all Docker containers and networks, use:
-```bash
-
-bash docker-cleanup.sh
-```
+Also `assemple.sh` recognize several cmd arguments:
+  - `-c` is going to clean up all previous docker containers and volumes (be aware that database and users will be wiped as well)
+  - `-t` runs `./gradlew clean test` before application rollout

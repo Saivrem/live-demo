@@ -33,7 +33,7 @@ management:
 server:
     servlet:
         context-path: "/icedata/api/v2"
-    port: 8086
+    port: ${JAVA_PORT}
 
 logging:
     level:
@@ -42,11 +42,14 @@ logging:
 icedata-v2:
     cron:  "0 0 10 * * ?" # every day at 10 AM
     batch-size: 1000 # how many entries should be saved into DB on update
-    icecat-base-url: "https://data.icecat.biz/export/freexml/"
-    icedata-base-url: "http://localhost" # todo
+    icecat-base-url: ${ICECAT_BASE}
+    icecat-repo: ${ICECAT_REPO}
+    icedata-base-url: ${JAVA_HOST}
     api-path: ${server.servlet.context-path}
-    suppliers-list-file: "refs/SuppliersList.xml.gz"
-    suppliers-mapping-file: "EN/supplier_mapping.xml"
-    language-list-file: "refs/LanguageList.xml.gz"
     service-username: ${ICECAT_USER}
     service-password: ${ICECAT_PASS}
+
+files: # TODO think on proper URLs storing and configuration
+    language-list-file: ${LANG_LIST:refs/LanguageList.xml.gz}
+    suppliers-list: ${SUPPLIERS_LIST:refs/SuppliersList.xml.gz}
+    supplier-mapping: ${SUPPLIER_MAPPING:EN/supplier_mapping.xml}
