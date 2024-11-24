@@ -19,11 +19,11 @@ public class LanguageEntity {
     @Id
     @Column(name = "lang_id")
     private Long langId;
-    @Column
+    @Column(name = "int_lang_name")
     private String intLangName;
-    @Column
+    @Column(name = "short_code")
     private String shortCode;
-    @Column
+    @Column(name = "updated")
     private Long updated;
 
     @OneToMany(cascade = {CascadeType.ALL})

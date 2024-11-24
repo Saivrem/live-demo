@@ -1,16 +1,22 @@
 package biz.icecat.icedatav2.utils;
 
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.util.Optional;
 
+@Slf4j
 @UtilityClass
 public class DateUtils {
+
+    public final static ZoneId UTC = ZoneId.of("UTC");
 
     private final static DateTimeFormatter FORMATTER = new DateTimeFormatterBuilder()
             .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -19,7 +25,7 @@ public class DateUtils {
             .toFormatter();
 
     public static LocalDateTime localDateTime(Long dateTime) {
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTime), ZoneId.of("UTC"));
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTime), UTC);
     }
 
     public static LocalDateTime parse(String dateTimeString) {
@@ -30,7 +36,33 @@ public class DateUtils {
         try {
             return LocalDateTime.parse(dateTimeString, FORMATTER);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Unsupported date format: " + dateTimeString, e);
+            log.warn("Couldn't produce LocalDateTime out of {}", dateTimeString);
+            return null;
         }
+    }
+
+    public static Long parseToLong(String dateTimeString) {
+        if (StringUtils.isBlank(dateTimeString)) {
+            return null;
+        }
+
+        try {
+            ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            return zonedDateTime.withZoneSameInstant(UTC).toInstant().toEpochMilli();
+        } catch (Exception e) {
+            log.warn("Couldn't parse Zoned Date Time out of {}", dateTimeString);
+            return Optional.ofNullable(parse(dateTimeString))
+                    .map(ldt -> ldt.atZone(UTC).toInstant().toEpochMilli())
+                    .orElse(null);
+        }
+    }
+
+    public static String format(Long timestamp, ZoneId zone) {
+        if (timestamp == null) {
+            return null;
+        }
+
+        ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), UTC);
+        return zonedDateTime.withZoneSameInstant(zone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 }
