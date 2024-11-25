@@ -12,15 +12,15 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("api/v2/suppliers")
+@RequestMapping("suppliers")
 @RequiredArgsConstructor
 public class SuppliersController {
 
-    private final static HttpHeaders headers;
+    private final static HttpHeaders responseHeaders;
 
     static {
-        headers = new HttpHeaders();
-        headers.set("Access-Control-Allow-Origin", "*");
+        responseHeaders = new HttpHeaders();
+        responseHeaders.set("Access-Control-Allow-Origin", "*");
     }
 
     private final SuppliersService suppliersService;
@@ -29,7 +29,7 @@ public class SuppliersController {
     public ResponseEntity<?> getAllSuppliers() {
         List<ApiSupplier> supplierEntities = suppliersService.findAll();
 
-        return ResponseEntity.ok().headers(headers).body(supplierEntities);
+        return ResponseEntity.ok().headers(responseHeaders).body(supplierEntities);
     }
 
     // TODO Add authorization
@@ -38,7 +38,7 @@ public class SuppliersController {
         log.info("Received {}", apiSupplier);
         ApiSupplier created = suppliersService.createSupplier(apiSupplier);
         if (created != null) {
-            return ResponseEntity.ok().headers(headers).body(created);
+            return ResponseEntity.ok().headers(responseHeaders).body(created);
         }
 
         return ResponseEntity.badRequest().build();

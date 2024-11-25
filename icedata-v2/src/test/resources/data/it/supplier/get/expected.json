@@ -1,0 +1,16 @@
+[
+  {
+    "brandLogo": "brand_logo.jpg",
+    "isSponsor": 1,
+    "supplierId": 1,
+    "supplierMappings": [],
+    "supplierName": "Sponsor_1"
+  },
+  {
+    "brandLogo": "brand_logo.jpg",
+    "isSponsor": 0,
+    "supplierId": 2,
+    "supplierMappings": [],
+    "supplierName": "Not_Sponsor_1"
+  }
+]

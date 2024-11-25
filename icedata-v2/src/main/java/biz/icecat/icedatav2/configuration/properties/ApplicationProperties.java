@@ -13,15 +13,19 @@ import org.springframework.validation.annotation.Validated;
 public class ApplicationProperties {
 
     @NotBlank
-    private String baseUrl;
+    private String icecatBaseUrl;
     @NotBlank
-    private String suppliersListFile;
+    private String icecatRepo;
     @NotBlank
-    private String suppliersMappingFile;
+    private String icedataBaseUrl;
     @NotBlank
-    private String languageListFile;
+    private String apiPath;
     @NotBlank
     private String serviceUserName;
     @NotBlank
     private String servicePassword;
+
+    public String resolveIcecatLink(String targetFile) {
+        return icecatBaseUrl + icecatRepo + targetFile;
+    }
 }

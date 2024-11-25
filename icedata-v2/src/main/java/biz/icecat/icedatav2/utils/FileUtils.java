@@ -29,4 +29,18 @@ public class FileUtils {
             log.warn("Can't process {}", inputFile.getFileName());
         }
     }
+
+    /**
+     * While it shouldn't be possible, method verifies that temp file already exists and removes it
+     * @param path {@link Path} to desired file
+     */
+    public static void createTempFile(Path path) {
+        try {
+            Files.deleteIfExists(path);
+            Files.createDirectories(path);
+        } catch (IOException e) {
+            log.warn("Failed to create {}", path);
+            throw new RuntimeException(e);
+        }
+    }
 }

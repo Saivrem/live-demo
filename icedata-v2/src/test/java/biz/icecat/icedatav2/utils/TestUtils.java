@@ -1,6 +1,8 @@
 package biz.icecat.icedatav2.utils;
 
 import biz.icecat.icedatav2.it.BaseIT;
+import biz.icecat.icedatav2.utils.models.TestOptions;
+import biz.icecat.icedatav2.utils.models.UrlParam;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,14 +11,21 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @UtilityClass
 
@@ -68,5 +77,43 @@ public class TestUtils {
 
     public static InputStream getResourceInputStream(String path) {
         return BaseIT.class.getClassLoader().getResourceAsStream(path);
+    }
+
+    public static URI buildUri(String url, List<UrlParam> params) {
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url);
+        if (params != null) {
+            params.forEach(param -> uriComponentsBuilder.queryParam(param.param(), param.value()));
+        }
+        return uriComponentsBuilder.build().toUri();
+    }
+
+    public static HttpHeaders buildHeaders(Map<String, String> map) {
+        HttpHeaders headers = new HttpHeaders();
+        map.forEach(headers::add);
+        return headers;
+    }
+
+    @Deprecated(since = "22.10.2024")
+    public static <T> T loadExpected(String pathToExpected) {
+        return loadEntities(readResourceFile(pathToExpected));
+    }
+
+    @Deprecated(since = "22.10.2024")
+    public static <T> T loadActual(String actualBody) {
+        return loadEntities(actualBody);
+    }
+
+    @SneakyThrows
+    public static <T> T loadEntities(String body) {
+        return objectMapper.readValue(body, new TypeReference<>() {
+        });
+    }
+
+    public <A, E> void assertResponse(TestOptions options, ResponseEntity<String> response) {
+        if (options.getExpectedResponse() == null) return;
+        E expected = loadEntities(readResourceFile(options.getExpectedResponse()));
+        A actual = loadEntities(response.getBody());
+
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 }

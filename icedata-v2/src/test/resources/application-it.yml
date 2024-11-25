@@ -5,24 +5,44 @@ spring:
         name: "icedata-v2"
     jpa:
         show-sql: true
-        open-in-view: false # disables lazy loading outside of Transaction
+        open-in-view: true # if false disables lazy loading outside of Transaction
         hibernate:
             dialect: MySQL8Dialect
-            ddl-auto: update
+            ddl-auto: none
         database-platform: org.hibernate.dialect.MySQLDialect
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         username: icecat
         password: icecat
         url: mocked-in-tests
+    flyway:
+      enabled: true
+      user: flyway
+      password: flyway
+      connect-retries: 3
+      baseline-on-migrate: true
+
+logging:
+    level:
+        ROOT: INFO
+        sql: DEBUG
+        org.flywaydb: DEBUG
+
 server:
+    servlet:
+        context-path: "/icedata/api/v2"
     port: 8086
 
 icedata-v2:
-    cron: "-" # every minute
-    base-url: "mocked-in-tests"
-    suppliers-list-file: "refs/SuppliersList.xml.gz"
-    suppliers-mapping-file: "EN/supplier_mapping.xml"
-    language-list-file: "refs/LanguageList.xml.gz"
+    cron: "-" # disabled
+    batch-size: 1000 # how many entries should be saved into DB on update
+    icecat-base-url: "overridden-in-tests"
+    icecat-repo: "overridden-in-tests"
+    icedata-base-url: "http://localhost"
+    api-path: ${server.servlet.context-path}
     service-user-name: service-user
     service-password: service-pass
+files:
+    language-list-file: "refs/LanguageList.xml.gz"
+    suppliers-list: "refs/SuppliersList.xml.gz"
+    supplier-mapping: "supplier_mapping.xml"

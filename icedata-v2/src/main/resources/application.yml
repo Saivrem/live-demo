@@ -5,17 +5,34 @@ spring:
         name: "icedata-v2"
     jpa:
         show-sql: false
-        open-in-view: false # disables lazy loading outside of Transaction
+        open-in-view: true # if false disables lazy loading outside of Transaction
         hibernate:
             dialect: MySQL8Dialect
-            ddl-auto: update
+            ddl-auto: none
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         username: ${DB_USER}
         password: ${DB_PASS}
         url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_SCHEMA}?${DB_PARAMS}
+    flyway:
+      enabled: true
+      user: ${FLYWAY_USER}
+      password: ${FLYWAY_PASSWORD}
+      connect-retries: 3
+      baseline-on-migrate: true
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: health
 
 server:
+    servlet:
+        context-path: "/icedata/api/v2"
     port: 8086
 
 logging:
@@ -24,9 +41,15 @@ logging:
 
 icedata-v2:
     cron:  "0 0 10 * * ?" # every day at 10 AM
-    base-url: "https://data.icecat.biz/export/freexml/"
-    suppliers-list-file: "refs/SuppliersList.xml.gz"
-    suppliers-mapping-file: "EN/supplier_mapping.xml"
-    language-list-file: "refs/LanguageList.xml.gz"
+    batch-size: 1000 # how many entries should be saved into DB on update
+    icecat-base-url: ${ICECAT_BASE}
+    icecat-repo: ${ICECAT_REPO}
+    icedata-base-url: ${JAVA_HOST}
+    api-path: ${server.servlet.context-path}
     service-username: ${ICECAT_USER}
     service-password: ${ICECAT_PASS}
+
+files: # TODO think on proper URLs storing and configuration
+    language-list-file: ${LANG_LIST:refs/LanguageList.xml.gz}
+    suppliers-list: ${SUPPLIERS_LIST:refs/SuppliersList.xml.gz}
+    supplier-mapping: ${SUPPLIER_MAPPING:EN/supplier_mapping.xml}

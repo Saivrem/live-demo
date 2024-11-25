@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class SuppliersControllerTest {
 
-    private final static String SUPPLIERS_ENDPOINT = "/api/v2/suppliers";
+    private final static String SUPPLIERS_ENDPOINT = "/suppliers";
 
     @Autowired
     private MockMvc mockMvc;

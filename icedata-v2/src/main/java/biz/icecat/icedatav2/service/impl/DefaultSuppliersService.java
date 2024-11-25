@@ -1,10 +1,10 @@
 package biz.icecat.icedatav2.service.impl;
 
 import biz.icecat.icedatav2.models.api.ApiSupplier;
-import biz.icecat.icedatav2.persistence.entity.SupplierEntity;
-import biz.icecat.icedatav2.persistence.repository.SupplierRepository;
+import biz.icecat.icedatav2.models.entity.SupplierEntity;
+import biz.icecat.icedatav2.repository.SupplierRepository;
 import biz.icecat.icedatav2.service.SuppliersService;
-import biz.icecat.icedatav2.service.converters.SupplierConverter;
+import biz.icecat.icedatav2.mapping.converters.SupplierConverter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
