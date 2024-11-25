@@ -5,6 +5,8 @@ application-local.yml
 tmp
 generated*
 launchpad/bundled
+launchpad/uploads/*
+!launchpad/uploads/.htaccess
 .DS_Store
 
 

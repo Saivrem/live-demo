@@ -112,14 +112,14 @@ class Helper
     public function languages(): array
     {
 
-        $link = "http://" . getenv('JAVA_HOST') . ":" . getenv('JAVA_PORT') . "/api/v1/language/";
+        $link = "http://" . getenv('JAVA_HOST') . ":" . getenv('JAVA_PORT') . "/icedata/api/v2/languages";
         $languages = Helper::getRequest($link);
 
-        if (count($languages) === 0) {
+        /*if (count($languages) === 0) {
             if ($this->init()) {
                 $languages = $this->languages();
             }
-        }
+        }*/
         return $languages;
     }
 

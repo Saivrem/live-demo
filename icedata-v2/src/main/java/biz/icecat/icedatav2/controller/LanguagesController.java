@@ -26,7 +26,13 @@ public class LanguagesController {
 
     @GetMapping
     public ResponseEntity<List<ApiLanguage>> getLanguages() {
-        return ResponseEntity.ok(List.of(new ApiLanguage()));
+        return ResponseEntity.ok(
+                List.of(new ApiLanguage()
+                        .setLangId(1L)
+                        .setLangName("English")
+                        .setLangCode("EN")
+                )
+        );
     }
 
     @GetMapping("{id}")

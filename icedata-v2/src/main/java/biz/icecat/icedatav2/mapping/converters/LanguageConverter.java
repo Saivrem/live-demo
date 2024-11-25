@@ -16,8 +16,8 @@ public class LanguageConverter implements Converter<LanguageEntity, ApiLanguage>
     @Override
     public LanguageEntity apiToEntity(ApiLanguage api) {
         return new LanguageEntity().setLangId(api.getLangId())
-                .setIntLangName(api.getIntLangName())
-                .setShortCode(api.getShortCode())
+                .setIntLangName(api.getLangName())
+                .setShortCode(api.getLangCode())
                 .setUpdated(parseToLong(api.getUpdated()))
                 .setNames(languageNameConverter.toListOfEntities(api.getLanguageNames()));
     }
@@ -26,8 +26,8 @@ public class LanguageConverter implements Converter<LanguageEntity, ApiLanguage>
     public ApiLanguage entityToApi(LanguageEntity entity) {
         return new ApiLanguage()
                 .setLangId(entity.getLangId())
-                .setIntLangName(entity.getIntLangName())
-                .setShortCode(entity.getShortCode())
+                .setLangName(entity.getIntLangName())
+                .setLangCode(entity.getShortCode())
                 .setUpdated(format(entity.getUpdated(), UTC))
                 .setLanguageNames(languageNameConverter.toListOfApis(entity.getNames()));
     }

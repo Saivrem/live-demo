@@ -21,7 +21,7 @@ services:
 
   java:
     build:
-      dockerfile: springDockerfile
+      dockerfile: DockerfileJava
       context: .
     container_name: "icedata-v2-java"
     restart: always
@@ -40,7 +40,9 @@ services:
       start_period: 30s
 
   launchpad:
-    image: php:7.4-apache
+    build:
+        context: .
+        dockerfile: DockerfileWeb
     container_name: "icedata-v2-web"
     restart: always
     env_file:

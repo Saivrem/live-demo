@@ -10,8 +10,8 @@ import java.util.List;
 public class ApiLanguage {
 
     private Long langId;
-    private String intLangName;
-    private String shortCode;
+    private String langName;
+    private String langCode;
     private String updated;
 
     private List<ApiLanguageName> languageNames;

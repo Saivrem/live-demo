@@ -1,0 +1,10 @@
+FROM php:7.4-apache
+
+RUN apt update && apt install -y cron
+COPY cleanUploads.sh /usr/local/bin/cleanup.sh
+RUN chmod +x /usr/local/bin/cleanup.sh
+RUN echo "0 0 * * * /usr/local/bin/cleanup.sh > /var/log/cleanup.log 2>&1" >> /etc/cron.d/cleanup-cron
+RUN chmod 0644 /etc/cron.d/cleanup-cron && \
+    crontab /etc/cron.d/cleanup-cron
+
+CMD ["bash", "-c", "cron && apache2-foreground"]
