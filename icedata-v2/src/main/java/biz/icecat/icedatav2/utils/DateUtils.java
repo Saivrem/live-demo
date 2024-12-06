@@ -4,10 +4,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.Optional;
@@ -47,8 +44,8 @@ public class DateUtils {
         }
 
         try {
-            ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-            return zonedDateTime.withZoneSameInstant(UTC).toInstant().toEpochMilli();
+            LocalDateTime localDateTime = LocalDateTime.parse(dateTimeString, FORMATTER);
+            return localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
         } catch (Exception e) {
             log.warn("Couldn't parse Zoned Date Time out of {}", dateTimeString);
             return Optional.ofNullable(parse(dateTimeString))

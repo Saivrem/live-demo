@@ -1,6 +1,9 @@
 package biz.icecat.icedatav2.controller;
 
+import biz.icecat.icedatav2.mapping.converters.LanguageConverter;
 import biz.icecat.icedatav2.models.api.ApiLanguage;
+import biz.icecat.icedatav2.repository.LanguagesRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +17,14 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("languages")
+@RequiredArgsConstructor
 public class LanguagesController {
 
     // TODO extract somewhere
     private final static HttpHeaders headers;
+    // TODO extract to service
+    private final LanguagesRepository repository;
+    private final LanguageConverter converter;
 
     static {
         headers = new HttpHeaders();
@@ -26,13 +33,7 @@ public class LanguagesController {
 
     @GetMapping
     public ResponseEntity<List<ApiLanguage>> getLanguages() {
-        return ResponseEntity.ok(
-                List.of(new ApiLanguage()
-                        .setLangId(1L)
-                        .setLangName("English")
-                        .setLangCode("EN")
-                )
-        );
+        return ResponseEntity.ok(converter.toListOfApis(repository.findAll()));
     }
 
     @GetMapping("{id}")

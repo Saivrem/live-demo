@@ -102,7 +102,7 @@ class Helper
 
     static function getFooter(): string
     {
-        return '<footer class="bg-light text-center text-lg-start fixed-bottom" style="height: 5%; opacity: 70%">
+        return '<footer id= "footer-id" class="bg-light text-center text-lg-start fixed-bottom">
                     <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">© 2018-2024 Copyright:
                         <a class="text-dark" href="https://github.com/saivrem">Denis Sheviakov</a>. All Rights Reserved
                     </div>

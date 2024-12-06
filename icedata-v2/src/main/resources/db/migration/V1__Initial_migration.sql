@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS languages
 (
     lang_id       BIGINT       NOT NULL PRIMARY KEY,
     int_lang_name VARCHAR(255) NOT NULL,
-    short_code    VARCHAR(2)   NOT NULL,
+    short_code    VARCHAR(10)   NOT NULL,
     updated       BIGINT
 );
 

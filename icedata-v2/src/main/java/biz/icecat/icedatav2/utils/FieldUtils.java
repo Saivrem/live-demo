@@ -23,4 +23,6 @@ public class FieldUtils {
     };
 
     public static Function<String, Integer> mapToIntOrZero = mapToInt.andThen(num -> num != null ? num : 0);
+
+    public static Function<String, Long> mapDateTimeToLong = DateUtils::parseToLong;
 }
