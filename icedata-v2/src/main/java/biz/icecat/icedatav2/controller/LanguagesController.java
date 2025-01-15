@@ -1,8 +1,8 @@
 package biz.icecat.icedatav2.controller;
 
-import biz.icecat.icedatav2.mapping.converters.LanguageConverter;
 import biz.icecat.icedatav2.models.api.ApiLanguage;
-import biz.icecat.icedatav2.repository.LanguagesRepository;
+import biz.icecat.icedatav2.service.LanguagesService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 @Slf4j
 @RestController
 @RequestMapping("languages")
@@ -22,9 +24,7 @@ public class LanguagesController {
 
     // TODO extract somewhere
     private final static HttpHeaders headers;
-    // TODO extract to service
-    private final LanguagesRepository repository;
-    private final LanguageConverter converter;
+    private final LanguagesService languagesService;
 
     static {
         headers = new HttpHeaders();
@@ -33,11 +33,16 @@ public class LanguagesController {
 
     @GetMapping
     public ResponseEntity<List<ApiLanguage>> getLanguages() {
-        return ResponseEntity.ok(converter.toListOfApis(repository.findAll()));
+        List<@Valid ApiLanguage> languages = languagesService.getLanguages();
+        return ResponseEntity.ok(languages);
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<ApiLanguage> getLanguageById(@PathVariable String id) {
-        return ResponseEntity.ok(new ApiLanguage());
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiLanguage> getLanguageById(@PathVariable("id") Long id) {
+        ApiLanguage language = languagesService.getLanguageById(id);
+        if (language != null) {
+            return ResponseEntity.ok(language);
+        }
+        return ResponseEntity.status(NOT_FOUND).build();
     }
 }

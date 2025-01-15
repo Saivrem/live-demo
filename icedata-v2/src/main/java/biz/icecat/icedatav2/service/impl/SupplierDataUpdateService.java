@@ -8,7 +8,7 @@ import biz.icecat.icedatav2.utils.SaxUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.SAXParser;
@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import static biz.icecat.icedatav2.utils.LoadingUtils.getDownloadedFile;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class SupplierDataUpdateService implements DataUpdateService {
 

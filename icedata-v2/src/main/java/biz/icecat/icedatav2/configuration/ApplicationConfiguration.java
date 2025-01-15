@@ -1,6 +1,5 @@
 package biz.icecat.icedatav2.configuration;
 
-import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -14,8 +13,6 @@ import java.time.Clock;
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfiguration {
-
-    private final ApplicationProperties properties;
 
     @Bean
     public Clock clock() {
