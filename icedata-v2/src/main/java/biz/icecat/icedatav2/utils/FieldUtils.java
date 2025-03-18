@@ -6,6 +6,8 @@ import java.util.function.Function;
 
 @UtilityClass
 public class FieldUtils {
+    private final static String TRUE = "1";
+
     public static Function<String, Long> mapToLong = (string) -> {
         try {
             return Long.parseLong(string);
@@ -21,6 +23,8 @@ public class FieldUtils {
             return null;
         }
     };
+
+    public static Function<String, Boolean> mapToBool = TRUE::equals;
 
     public static Function<String, Integer> mapToIntOrZero = mapToInt.andThen(num -> num != null ? num : 0);
 

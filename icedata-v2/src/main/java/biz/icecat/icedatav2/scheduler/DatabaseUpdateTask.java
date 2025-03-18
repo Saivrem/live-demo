@@ -21,9 +21,10 @@ public class DatabaseUpdateTask {
     public void updateDatabase() {
         services.forEach(service -> {
             String serviceName = service.getClass().getSimpleName();
+            log.info("Starting {}", serviceName);
             try {
                 int updated = service.update();
-                log.info("{} Updated {} entries", service, updated);
+                log.info("{} Updated {} entries", serviceName, updated);
             } catch (Exception e) {
                 log.warn("Couldn't finish update {}", serviceName);
             }

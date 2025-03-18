@@ -1,6 +1,7 @@
 package biz.icecat.icedatav2.service.impl;
 
 import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
+import biz.icecat.icedatav2.mapping.converters.SupplierConverter;
 import biz.icecat.icedatav2.repository.SupplierRepository;
 import biz.icecat.icedatav2.sax.SupplierHandler;
 import biz.icecat.icedatav2.service.DataUpdateService;
@@ -25,6 +26,7 @@ public class SupplierDataUpdateService implements DataUpdateService {
 
     private final ApplicationProperties properties;
     private final SupplierRepository repository;
+    private final SupplierConverter converter;
     @Value("${icedata-v2.batch-size}")
     private Integer batchSize;
     @Value("${files.suppliers-list}")
@@ -34,7 +36,9 @@ public class SupplierDataUpdateService implements DataUpdateService {
     @Override
     public int update() {
         try {
-            SupplierHandler handler = new SupplierHandler(batchSize, repository::saveAll);
+            SupplierHandler handler = new SupplierHandler(batchSize,
+                    (suppliers -> repository.saveAll(converter.domainsListToListOfEntities(suppliers)))
+            );
             SAXParser saxParser = SaxUtils.getParser();
 
             Path suppliersList = getDownloadedFile(suppliersListFile, "suppliers_list.xml", properties);

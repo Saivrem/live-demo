@@ -1,7 +1,6 @@
 package biz.icecat.icedatav2.sax;
 
-import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
-import biz.icecat.icedatav2.models.entity.SupplierEntity;
+import biz.icecat.icedatav2.models.refs.suppliers.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,10 +11,8 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
-import static biz.icecat.icedatav2.utils.FieldUtils.mapToIntOrZero;
-import static biz.icecat.icedatav2.utils.FieldUtils.mapToLong;
+import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
 
 // TODO Very POC implementation, refactor!
 @Slf4j
@@ -24,25 +21,18 @@ public class SupplierHandler extends DefaultHandler {
 
     private static final String SUPPLIER = "Supplier";
 
-    private static final List<XmlAttributeBiConsumer<SupplierEntity, ?>> SUPPLIER_ATTRIBUTES_PROCESSOR = List.of(
-            new XmlAttributeBiConsumer<>("ID", SupplierEntity::setSupplierId, mapToLong),
-            new XmlAttributeBiConsumer<>("Name", SupplierEntity::setSupplierName, Function.identity()),
-            new XmlAttributeBiConsumer<>("LogoPic", SupplierEntity::setBrandLogo, Function.identity()),
-            new XmlAttributeBiConsumer<>("Sponsor", SupplierEntity::setIsSponsor, mapToIntOrZero)
-    );
-
     private final int batchSize;
-    private final Consumer<List<SupplierEntity>> consumer;
-    private final List<SupplierEntity> suppliers = new ArrayList<>();
+    private final Consumer<List<Supplier>> consumer;
+    private final List<Supplier> suppliers = new ArrayList<>();
     @Getter
     private int processedSuppliersNumber = 0;
-    private SupplierEntity currentSupplier;
+    private Supplier currentSupplier;
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equalsIgnoreCase(SUPPLIER)) {
-            currentSupplier = new SupplierEntity();
-            populateFields(currentSupplier, attributes);
+            currentSupplier = new Supplier();
+            populateFields(currentSupplier, attributes, currentSupplier.getAttributeProcessors());
         }
     }
 
@@ -66,25 +56,14 @@ public class SupplierHandler extends DefaultHandler {
     }
 
     /**
-     * Populate fields of passed Supplier entity from attributes
-     *
-     * @param supplier   {@link SupplierEntity} current supplier entity
-     * @param attributes {@link Attributes} of current XML element
-     */
-    private void populateFields(SupplierEntity supplier, Attributes attributes) {
-        SUPPLIER_ATTRIBUTES_PROCESSOR.forEach(processor -> {
-            String value = attributes.getValue(processor.xmlAttributeName());
-            if (value != null) {
-                processor.apply(supplier, value);
-            }
-        });
-    }
-
-    /**
      * Passing current suppliers batch to consumer
      */
     private void flush() {
-        consumer.accept(suppliers);
+        try {
+            consumer.accept(suppliers);
+        } catch (Exception e) {
+            log.error("{}", e.getMessage());
+        }
         processedSuppliersNumber += suppliers.size();
         log.debug("{}: processed {} entries", getClass().getSimpleName(), suppliers.size());
         suppliers.clear();
