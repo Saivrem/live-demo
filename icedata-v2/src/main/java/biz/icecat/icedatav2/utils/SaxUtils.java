@@ -1,6 +1,7 @@
 package biz.icecat.icedatav2.utils;
 
 import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
+import biz.icecat.icedatav2.models.refs.XmlElement;
 import lombok.experimental.UtilityClass;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -8,7 +9,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.util.List;
 
 @UtilityClass
 public class SaxUtils {
@@ -31,10 +31,10 @@ public class SaxUtils {
      *
      * @param object        {@link T} is a generic type calculated from {@link XmlAttributeBiConsumer} passed into method
      * @param attributes    {@link Attributes} of current XML element
-     * @param processorList a list of {@link XmlAttributeBiConsumer} for a particular attributes set
      */
-    public static <T> void populateFields(T object, Attributes attributes, List<XmlAttributeBiConsumer<T, ?>> processorList) {
-        processorList.forEach(processor -> {
+    public static <T extends XmlElement<T>> void populateFields(T object, Attributes attributes) {
+        if (object == null) return;
+        object.getAttributeProcessors().forEach(processor -> {
             String value = attributes.getValue(processor.xmlAttributeName());
             if (value != null) {
                 processor.apply(object, value);

@@ -32,7 +32,7 @@ public class SupplierHandler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equalsIgnoreCase(SUPPLIER)) {
             currentSupplier = new Supplier();
-            populateFields(currentSupplier, attributes, currentSupplier.getAttributeProcessors());
+            populateFields(currentSupplier, attributes);
         }
     }
 

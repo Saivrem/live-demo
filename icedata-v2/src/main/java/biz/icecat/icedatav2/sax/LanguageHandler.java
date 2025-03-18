@@ -32,7 +32,7 @@ public class LanguageHandler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equals(LANGUAGE)) {
             currentLanguage = new Language();
-            populateFields(currentLanguage, attributes, currentLanguage.getAttributeProcessors());
+            populateFields(currentLanguage, attributes);
         }
     }
 

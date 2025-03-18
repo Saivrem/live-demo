@@ -52,17 +52,17 @@ public class CategoryFeatureListHandler extends DefaultHandler {
         switch (qName) {
             case "Category" -> {
                 currentCategory = new Category();
-                populateFields(currentCategory, attributes, currentCategory.getAttributeProcessors());
+                populateFields(currentCategory, attributes);
             }
             case "Feature" -> {
                 inFeature = true;
                 currentFeature = new Feature();
-                populateFields(currentFeature, attributes, currentFeature.getAttributeProcessors());
+                populateFields(currentFeature, attributes);
             }
             case "FeatureGroup" -> inFeatureGroup = true;
             case "Name" -> {
                 Name name = new Name();
-                populateFields(name, attributes, name.getAttributeProcessors());
+                populateFields(name, attributes);
                 if (name.getLangId() == 1) {
                     if (inFeature) {
                         currentFeature.setIntName(name.getValue());
