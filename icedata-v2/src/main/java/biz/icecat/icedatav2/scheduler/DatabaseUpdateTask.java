@@ -20,34 +20,11 @@ public class DatabaseUpdateTask {
     @Scheduled(cron = "${icedata-v2.cron}")
     public void updateDatabase() {
         services.forEach(service -> {
-            String serviceName = service.getClass().getSimpleName();
-            log.info("Starting {}", serviceName);
             try {
-                int updated = service.update();
-                log.info("{} Updated {} entries", serviceName, updated);
+                service.update();
             } catch (Exception e) {
-                log.warn("Couldn't finish update {}", serviceName);
+                log.warn("Couldn't finish update {}", service.getClass().getSimpleName());
             }
         });
     }
-
-/*    @Measured(methodName = "Update Suppliers info")
-    private void updateSuppliers() {
-        try {
-            int supplierEntriesUpdated = supplierDataUpdateService.update();
-            log.info("Updated {} suppliers", supplierEntriesUpdated);
-        } catch (Exception e) {
-            log.warn("Failed to update suppliers list on");
-        }
-    }
-
-    @Measured(methodName = "Update languages")
-    private void updateLanguages() {
-        try {
-            int updatedLanguages = languagesDataUpdateService.update();
-            log.info("Updated {} languages and", updatedLanguages);
-        } catch (Exception e) {
-            log.warn("Failed to update languages table on");
-        }
-    }*/
 }

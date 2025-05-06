@@ -1,5 +1,6 @@
 package biz.icecat.icedatav2.service.impl;
 
+import biz.icecat.icedatav2.aspect.Measured;
 import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
 import biz.icecat.icedatav2.mapping.converters.SupplierConverter;
 import biz.icecat.icedatav2.repository.SupplierRepository;
@@ -32,8 +33,8 @@ public class SupplierDataUpdateService implements DataUpdateService {
     @Value("${files.suppliers-list}")
     private String suppliersListFile;
 
-    // TODO think about whole flow, logging and handling
     @Override
+    @Measured(methodName = "Update Suppliers info")
     public int update() {
         try {
             SupplierHandler handler = new SupplierHandler(batchSize,

@@ -6,6 +6,18 @@
 
 ENV_FILE=".env"
 
+FORCE=false
+for arg in "$@"; do
+  if [[ "$arg" == "-f" || "$arg" == "--force" ]]; then
+    FORCE=true
+  fi
+done
+
+if [ -f "$ENV_FILE" ] && [ "$FORCE" = false ]; then
+  echo "$ENV_FILE already exists. Use -f or --force to overwrite."
+  exit 1
+fi
+
 cat << EOF > $ENV_FILE
 # ---------- Database Configuration ----------
 DB_USER="db_user"                            # Username for the database

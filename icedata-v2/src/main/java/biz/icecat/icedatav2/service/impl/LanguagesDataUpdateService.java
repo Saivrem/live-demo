@@ -1,5 +1,6 @@
 package biz.icecat.icedatav2.service.impl;
 
+import biz.icecat.icedatav2.aspect.Measured;
 import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
 import biz.icecat.icedatav2.mapping.converters.LanguageConverter;
 import biz.icecat.icedatav2.repository.LanguagesRepository;
@@ -32,6 +33,7 @@ public class LanguagesDataUpdateService implements DataUpdateService {
     private String languagesFile;
 
     @Override
+    @Measured(methodName = "Update Languages")
     public int update() {
         LanguageHandler handler = new LanguageHandler(1,
                 (languages) -> repository.saveAll(converter.domainsListToListOfEntities(languages))
