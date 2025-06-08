@@ -8,7 +8,5 @@ import java.util.List;
 
 @Validated
 public interface LanguagesService {
-    List<@Valid ApiLanguage> getLanguages();
-
-    ApiLanguage getLanguageById(Long id);
+    List<@Valid ApiLanguage> getLanguages(List<Long> id);
 }

@@ -20,15 +20,14 @@ public class DefaultLanguagesService implements LanguagesService {
     private final LanguageConverter converter;
 
     @Override
-    public List<ApiLanguage> getLanguages() {
-        List<LanguageEntity> findAll = repository.findAll();
-        return converter.toListOfApis(findAll);
-    }
+    public List<ApiLanguage> getLanguages(List<Long> ids) {
+        List<LanguageEntity> result;
 
-    @Override
-    public ApiLanguage getLanguageById(Long id) {
-        return repository.findById(id)
-                .map(converter::entityToApi)
-                .orElse(null);
+        if (ids != null && !ids.isEmpty()) {
+            result = repository.findAllById(ids);
+        } else {
+            result = repository.findAll();
+        }
+        return converter.toListOfApis(result);
     }
 }
