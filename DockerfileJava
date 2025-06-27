@@ -1,5 +1,5 @@
 FROM openjdk:17
-ARG JAR_FILE=icedata-v2/build/libs/icedata-v2-0.0.1-SNAPSHOT.jar
+ARG JAR_FILE=icedata-v2/build/libs/icedata-v2-0.1.0-SNAPSHOT.jar
 COPY ${JAR_FILE} /opt/be.jar
 RUN chmod 770 /opt/be.jar
 ENTRYPOINT ["java","-jar","/opt/be.jar"]
