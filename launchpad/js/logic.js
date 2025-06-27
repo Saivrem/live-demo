@@ -1,15 +1,18 @@
 /**
- * Global variable for link copying
- * @type {string}
+ * Configuration object containing global settings and constants
+ * @type {{indent: string, codeStash: string, linkBuilder: string}}
  */
-let linkBuilder = "";
-let codeStash = "";
-let indent = "    ";
+const config = {
+    linkBuilder: "",
+    codeStash: "",
+    indent: "    "
+};
 
 /**
  * Everything below should start only when the index page is fully loaded
  */
 window.onload = function () {
+    initializeEventListeners();
 
     /**
      * Protocol
@@ -213,25 +216,21 @@ window.onload = function () {
     }
 
     /**
-     * Index Dropdown menu listener
+     * Initialize all event listeners
      */
-    areas.indexDropdown.addEventListener('click', () => {
-        dropdownSetter("indexDropdownBody");
-    });
+    function initializeEventListeners() {
+        areas.indexDropdown.addEventListener('click', () => {
+            dropdownSetter("indexDropdownBody");
+        });
 
-    /**
-     * Ref files dropdown menu listener
-     */
-    areas.refsDropdown.addEventListener('click', () => {
-        dropdownSetter("refDropdownBody");
-    });
+        areas.refsDropdown.addEventListener('click', () => {
+            dropdownSetter("refDropdownBody");
+        });
 
-    /**
-     * Documents dropdown listener
-     */
-    areas.documentsDropdown.addEventListener('click', () => {
-        dropdownSetter("documentsBody");
-    })
+        areas.documentsDropdown.addEventListener('click', () => {
+            dropdownSetter("documentsBody");
+        });
+    }
 
     /**
      * Checkbox setter/un setter;
@@ -1025,24 +1024,27 @@ window.onload = function () {
     enableInputFields(['mpn', 'brand']);
 }
 
+/**
+ * Utility class for string manipulation
+ */
 class StringBuilder {
-    string;
+    #string;
 
     constructor(str) {
-        this.string = str;
+        this.#string = str;
     }
 
     append(suffix) {
-        this.string += suffix;
+        this.#string += suffix;
         return this;
     }
 
     removeCharAtIndex(index) {
-        this.string = this.string.substring(0, index - 1) + this.string.substring(index, this.string.length);
+        this.#string = this.#string.substring(0, index - 1) + this.#string.substring(index, this.#string.length);
     }
 
     toString() {
-        return this.string;
+        return this.#string;
     }
 }
 

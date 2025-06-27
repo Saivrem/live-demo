@@ -1,28 +1,33 @@
 <?php
 include($_SERVER['DOCUMENT_ROOT'] . "/php/Helper.php");
+
+// Get and sort languages
 $languages = (new Helper())->languages();
 uasort($languages, function ($a, $b) {
-return strcmp($a['langName'], $b['langName']);
+    return strcmp($a['langName'], $b['langName']);
 });
 
+// Define checkbox options
 $checkboxNames = [
-'title', 'gallery', 'related',
-'featurelogos', 'productstory', 'image',
-'essentialinfo', 'marketingtext', 'variants',
-'bulletpoints', 'reasonstobuy', 'generalinfo',
-'videos', 'tours3d', 'manuals',
-'featuregroups', 'reviews', 'selectAll'
+    'title', 'gallery', 'related',
+    'featurelogos', 'productstory', 'image', 
+    'essentialinfo', 'marketingtext', 'variants',
+    'bulletpoints', 'reasonstobuy', 'generalinfo',
+    'videos', 'tours3d', 'manuals',
+    'featuregroups', 'reviews', 'selectAll'
 ];
+
+// Define input elements
 $inputElements = [
-'username' => 'openicecat-live',
-'appkey' => '',
-'mpn' => '5587-9709',
-'brand' => "Dell",
-'ean' => '5397184119709',
-'productId' => '56195846',
-'language' => '',
-'output' => ''
-]
+    'username' => 'openicecat-live',
+    'appkey' => '',
+    'mpn' => '5587-9709', 
+    'brand' => "Dell",
+    'ean' => '5397184119709',
+    'productId' => '56195846',
+    'language' => '',
+    'output' => ''
+];
 ?>
 
 <!DOCTYPE html>
@@ -283,45 +288,42 @@ $inputElements = [
 <script src='https://live.icecat.biz/js/live-current-2.js'></script>
 
 <?php
-//file uploader
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Handle file uploads
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
+    $errors = [];
+    $path = 'uploads/';
+    $extensions = ['csv', 'xls', 'xlsx', 'docx', 'doc'];
+    $maxFileSize = 20971520; // 20MB
 
-    if (isset($_FILES['files'])) {
-        $errors = [];
-        $path = 'uploads/';
-        $extensions = ['csv', 'xls', 'xlsx', 'docx', 'doc'];
+    $allFiles = count($_FILES['files']['tmp_name']);
 
-        $all_files = count($_FILES['files']['tmp_name']);
+    for ($i = 0; $i < $allFiles; $i++) {
+        $fileName = $_FILES['files']['name'][$i];
+        $fileTmp = $_FILES['files']['tmp_name'][$i];
+        $fileType = $_FILES['files']['type'][$i];
+        $fileSize = $_FILES['files']['size'][$i];
+        $fileExt = strtolower(end(explode('.', $fileName)));
 
-        for ($i = 0; $i < $all_files; $i++) {
-            $file_name = $_FILES['files']['name'][$i];
-            $file_tmp = $_FILES['files']['tmp_name'][$i];
-            $file_type = $_FILES['files']['type'][$i];
-            $file_size = $_FILES['files']['size'][$i];
-            $array = explode('.', $_FILES['files']['name'][$i]);
-            $file_ext = strtolower(end($array));
+        $filePath = $path . $fileName;
 
-            $file = $path . $file_name;
+        if (!in_array($fileExt, $extensions)) {
+            $errors[] = 'Extension not allowed: ' . $fileName . ' ' . $fileType;
+        }
 
+        if ($fileSize > $maxFileSize) {
+            $errors[] = 'File size exceeds limit: ' . $fileName . ' ' . $fileType;
+        }
 
-            if (!in_array($file_ext, $extensions)) {
-                $errors[] = 'Extension not allowed: ' . $file_name . ' ' . $file_type;
-            }
+        if (empty($errors)) {
+            move_uploaded_file($fileTmp, $filePath);
+        }
+    }
 
-            if ($file_size > 20971520) {
-$errors[] = 'File size exceeds limit: ' . $file_name . ' ' . $file_type;
+    if ($errors) {
+        print_r($errors);
+    }
 }
-
-if (empty($errors)) {
-move_uploaded_file($file_tmp, $file);
-}
-}
-
-if ($errors) {
-print_r($errors);
-}
-}
-} ?>
+?>
 <div class="modal" id="shareModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">

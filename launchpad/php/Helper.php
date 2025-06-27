@@ -2,6 +2,12 @@
 
 class Helper
 {
+    private const DATE_FORMAT_PATTERN = 'd-M-Y';
+    private const FOOTER_HTML = '<footer id= "footer-id" class="bg-light text-center text-lg-start fixed-bottom">
+                    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">© 2018-2024 Copyright:
+                        <a class="text-dark" href="https://github.com/saivrem">Denis Sheviakov</a>. All Rights Reserved
+                    </div>
+                </footer>';
     private $config = null;
 
     static function getSortingIcon($column, $direction, $field): string
@@ -28,10 +34,19 @@ class Helper
     static function getRequest(string $url): array
     {
         $curl = curl_init($url);
+        if (!$curl) {
+            throw new RuntimeException('Failed to initialize CURL');
+        }
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         $curlResult = curl_exec($curl);
+        if ($curlResult === false) {
+            $error = curl_error($curl);
+            curl_close($curl);
+            throw new RuntimeException('CURL request failed: ' . $error);
+        }
         curl_close($curl);
-        return json_decode($curlResult, true);
+        $decoded = json_decode($curlResult, true);
+        return $decoded ?? [];
     }
 
 
@@ -83,9 +98,7 @@ class Helper
      */
     static function prepareFlagField(array $data): array
     {
-        $pattern = 'd-M-Y';
-
-        array_walk($data, function (&$value) use ($pattern) {
+    array_walk($data, function (&$value) {
             $currentDate = new DateTime();
             $fileDate = DateTime::createFromFormat("d-M-Y :: H:i:s", $value["lastModified"], new DateTimeZone("UTC"));
             if ($currentDate->format($pattern) === $fileDate->format($pattern)) {
@@ -102,25 +115,22 @@ class Helper
 
     static function getFooter(): string
     {
-        return '<footer id= "footer-id" class="bg-light text-center text-lg-start fixed-bottom">
-                    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">© 2018-2024 Copyright:
-                        <a class="text-dark" href="https://github.com/saivrem">Denis Sheviakov</a>. All Rights Reserved
-                    </div>
-                </footer>';
+        return self::FOOTER_HTML;
+    }
+
+    private function getApiUrl(string $endpoint): string 
+    {
+        return sprintf("http://%s:%s%s", 
+            getenv('JAVA_HOST'), 
+            getenv('JAVA_PORT'),
+            $endpoint
+        );
     }
 
     public function languages(): array
     {
-
-        $link = "http://" . getenv('JAVA_HOST') . ":" . getenv('JAVA_PORT') . "/icedata/api/v2/languages";
-        $languages = Helper::getRequest($link);
-
-        /*if (count($languages) === 0) {
-            if ($this->init()) {
-                $languages = $this->languages();
-            }
-        }*/
-        return $languages;
+        $link = $this->getApiUrl("/icedata/api/v2/languages");
+        return Helper::getRequest($link);
     }
 
     public function init(): bool
