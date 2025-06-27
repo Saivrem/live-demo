@@ -4,8 +4,10 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.6'
 }
 
+apply from: 'version.gradle'
+
 group = 'biz.icecat'
-version = '0.0.1'
+version = loadVersion().getVersion()
 
 java {
     toolchain {
@@ -19,7 +21,7 @@ repositories {
 
 dependencies {
     def testContainersVersion = '1.20.3'
-    def junitVersion = '5.9.3'
+    def junitVersion = '5.10.1'
     def lombokVersion = '1.18.34'
     def flywayVersion = '10.20.0'
     def mysqlConnectorVersion = '8.0.33'

@@ -10,10 +10,10 @@ spring:
             dialect: MySQL8Dialect
             ddl-auto: none
     datasource:
+        url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_SCHEMA}?${DB_PARAMS}
         driver-class-name: com.mysql.cj.jdbc.Driver
         username: ${DB_USER}
         password: ${DB_PASS}
-        url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_SCHEMA}?${DB_PARAMS}
     flyway:
       enabled: true
       user: ${FLYWAY_USER}
@@ -40,7 +40,7 @@ logging:
         root: info
 
 icedata-v2:
-    cron:  "0 0 10 * * ?" # every day at 10 AM
+    cron:  "0 0 10 * * ?"
     batch-size: 1000 # how many entries should be saved into DB on update
     icecat-base-url: ${ICECAT_BASE}
     icecat-repo: ${ICECAT_REPO}

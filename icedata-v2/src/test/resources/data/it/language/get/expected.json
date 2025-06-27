@@ -1,0 +1,46 @@
+[
+  {
+    "langId": 1,
+    "langName": "English",
+    "langCode": "en",
+    "updated": "2021-01-01T00:00:00Z",
+    "languageNames": [
+      {
+        "langNameId": 1,
+        "translationLangId": 1,
+        "targetLangId": 1,
+        "nameTranslation": "English",
+        "updated": "2021-01-01T00:00:00Z"
+      },
+      {
+        "langNameId": 3,
+        "translationLangId": 2,
+        "targetLangId": 1,
+        "nameTranslation": "Inglés",
+        "updated": "2021-01-01T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "langId": 2,
+    "langName": "Spanish",
+    "langCode": "es",
+    "updated": "2021-01-01T00:00:00Z",
+    "languageNames": [
+      {
+        "langNameId": 2,
+        "translationLangId": 1,
+        "targetLangId": 2,
+        "nameTranslation": "Spanish",
+        "updated": "2021-01-01T00:00:00Z"
+      },
+      {
+        "langNameId": 4,
+        "translationLangId": 2,
+        "targetLangId": 2,
+        "nameTranslation": "Español",
+        "updated": "2021-01-01T00:00:00Z"
+      }
+    ]
+  }
+]

@@ -2,9 +2,9 @@ package biz.icecat.icedatav2.service.impl;
 
 import biz.icecat.icedatav2.aspect.Measured;
 import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
-import biz.icecat.icedatav2.mapping.converters.SupplierConverter;
-import biz.icecat.icedatav2.repository.SupplierRepository;
-import biz.icecat.icedatav2.sax.SupplierHandler;
+import biz.icecat.icedatav2.mapping.converters.LanguageConverter;
+import biz.icecat.icedatav2.repository.LanguagesRepository;
+import biz.icecat.icedatav2.sax.LanguageHandler;
 import biz.icecat.icedatav2.service.DataUpdateService;
 import biz.icecat.icedatav2.utils.SaxUtils;
 import lombok.RequiredArgsConstructor;
@@ -23,29 +23,28 @@ import static biz.icecat.icedatav2.utils.LoadingUtils.getDownloadedFile;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SupplierDataUpdateService implements DataUpdateService {
+public class LanguagesDataUpdateService implements DataUpdateService {
 
     private final ApplicationProperties properties;
-    private final SupplierRepository repository;
-    private final SupplierConverter converter;
-    @Value("${icedata-v2.batch-size}")
-    private Integer batchSize;
-    @Value("${files.suppliers-list}")
-    private String suppliersListFile;
+    private final LanguagesRepository repository;
+    private final LanguageConverter converter;
+
+    @Value("${files.language-list-file}")
+    private String languagesFile;
 
     @Override
-    @Measured(methodName = "Update Suppliers info")
+    @Measured(methodName = "Update Languages")
     public int update() {
+        LanguageHandler handler = new LanguageHandler(1,
+                (languages) -> repository.saveAll(converter.domainsListToListOfEntities(languages))
+        );
+        SAXParser saxParser = SaxUtils.getParser();
+
         try {
-            SupplierHandler handler = new SupplierHandler(batchSize,
-                    (suppliers -> repository.saveAll(converter.domainsListToListOfEntities(suppliers)))
-            );
-            SAXParser saxParser = SaxUtils.getParser();
+            Path languages = getDownloadedFile(languagesFile, "languages_list.xml", properties);
 
-            Path suppliersList = getDownloadedFile(suppliersListFile, "suppliers_list.xml", properties);
-            saxParser.parse(Files.newInputStream(suppliersList), handler);
-
-            return handler.getProcessedSuppliersNumber();
+            saxParser.parse(Files.newInputStream(languages), handler);
+            return handler.getProcessed();
         } catch (SAXException saxEx) {
             log.warn("Failed to configure parser for {}", this.getClass().getSimpleName());
         } catch (IOException e) {

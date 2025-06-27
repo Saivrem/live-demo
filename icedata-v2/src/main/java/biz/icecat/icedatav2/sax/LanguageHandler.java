@@ -1,6 +1,6 @@
 package biz.icecat.icedatav2.sax;
 
-import biz.icecat.icedatav2.models.refs.suppliers.Supplier;
+import biz.icecat.icedatav2.models.refs.languages.Language;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,35 +14,34 @@ import java.util.function.Consumer;
 
 import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
 
-// TODO Very POC implementation, refactor!
 @Slf4j
 @RequiredArgsConstructor
-public class SupplierHandler extends DefaultHandler {
+public class LanguageHandler extends DefaultHandler {
 
-    private static final String SUPPLIER = "Supplier";
+    private static final String LANGUAGE = "Language";
 
-    private final int batchSize;
-    private final Consumer<List<Supplier>> consumer;
-    private final List<Supplier> suppliers = new ArrayList<>();
     @Getter
-    private int processedSuppliersNumber = 0;
-    private Supplier currentSupplier;
+    private int processed = 0;
+    private final int batchSize;
+    private final Consumer<List<Language>> consumer;
+    private final List<Language> languages = new ArrayList<>();
+
+    private Language currentLanguage;
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        if (qName.equalsIgnoreCase(SUPPLIER)) {
-            currentSupplier = new Supplier();
-            populateFields(currentSupplier, attributes);
+        if (qName.equals(LANGUAGE)) {
+            currentLanguage = new Language();
+            populateFields(currentLanguage, attributes);
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase("Supplier") && currentSupplier != null) {
-            suppliers.add(currentSupplier);
-            currentSupplier = null;
+        if (qName.equals(LANGUAGE) && currentLanguage != null) {
+            languages.add(currentLanguage);
 
-            if (suppliers.size() == batchSize) {
+            if (languages.size() == batchSize) {
                 flush();
             }
         }
@@ -50,7 +49,7 @@ public class SupplierHandler extends DefaultHandler {
 
     @Override
     public void endDocument() throws SAXException {
-        if (!suppliers.isEmpty()) {
+        if (!languages.isEmpty()) {
             flush();
         }
     }
@@ -60,12 +59,12 @@ public class SupplierHandler extends DefaultHandler {
      */
     private void flush() {
         try {
-            consumer.accept(suppliers);
+            consumer.accept(languages);
         } catch (Exception e) {
             log.error("{}", e.getMessage());
         }
-        processedSuppliersNumber += suppliers.size();
-        log.debug("{}: processed {} entries", getClass().getSimpleName(), suppliers.size());
-        suppliers.clear();
+        processed += languages.size();
+        log.debug("{}: processed {} entries", getClass().getSimpleName(), languages.size());
+        languages.clear();
     }
 }

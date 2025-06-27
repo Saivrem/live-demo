@@ -19,14 +19,14 @@ CREATE TABLE IF NOT EXISTS languages
 (
     lang_id       BIGINT       NOT NULL PRIMARY KEY,
     int_lang_name VARCHAR(255) NOT NULL,
-    short_code    VARCHAR(2)   NOT NULL,
+    short_code    VARCHAR(10)  NOT NULL,
     updated       BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS language_names
 (
     lang_name_id        BIGINT NOT NULL PRIMARY KEY,
-    translation_lang_id BIGINT,
+    translation_lang_id BIGINT NOT NULL,
     target_lang_id      BIGINT,
     name_translation    VARCHAR(255),
     updated             BIGINT,
