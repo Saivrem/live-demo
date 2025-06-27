@@ -21,6 +21,7 @@ import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
  * This is WIP handler, currently not in use
  */
 @Slf4j
+@Deprecated(since = "0.1.0")
 public class CategoryFeatureListHandler extends DefaultHandler {
 
     private final static ObjectMapper objectMapper = new ObjectMapper();
