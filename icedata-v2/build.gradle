@@ -20,9 +20,9 @@ repositories {
 }
 
 dependencies {
-    def testContainersVersion = '1.19.6'
+    def testContainersVersion = '1.20.3'
     def junitVersion = '5.10.1'
-    def lombokVersion = '1.18.30'
+    def lombokVersion = '1.18.34'
     def flywayVersion = '10.4.1'
     def mysqlConnectorVersion = '8.0.33'
 
