@@ -16,7 +16,7 @@ import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
 
 @Slf4j
 @RequiredArgsConstructor
-public class LanguageHandler extends DefaultHandler {
+public class LanguageHandler extends DefaultHandler implements CountedHandler<Language> {
 
     private static final String LANGUAGE = "Language";
 
@@ -42,7 +42,7 @@ public class LanguageHandler extends DefaultHandler {
             languages.add(currentLanguage);
 
             if (languages.size() == batchSize) {
-                flush();
+                processed += flush(consumer, languages);
             }
         }
     }
@@ -50,21 +50,7 @@ public class LanguageHandler extends DefaultHandler {
     @Override
     public void endDocument() throws SAXException {
         if (!languages.isEmpty()) {
-            flush();
+            processed += flush(consumer, languages);
         }
-    }
-
-    /**
-     * Passing current suppliers batch to consumer
-     */
-    private void flush() {
-        try {
-            consumer.accept(languages);
-        } catch (Exception e) {
-            log.error("{}", e.getMessage());
-        }
-        processed += languages.size();
-        log.debug("{}: processed {} entries", getClass().getSimpleName(), languages.size());
-        languages.clear();
     }
 }

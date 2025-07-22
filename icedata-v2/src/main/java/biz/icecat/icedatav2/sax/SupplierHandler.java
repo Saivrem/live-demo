@@ -17,7 +17,7 @@ import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
 // TODO Very POC implementation, refactor!
 @Slf4j
 @RequiredArgsConstructor
-public class SupplierHandler extends DefaultHandler {
+public class SupplierHandler extends DefaultHandler  implements CountedHandler<Supplier> {
 
     private static final String SUPPLIER = "Supplier";
 
@@ -25,7 +25,7 @@ public class SupplierHandler extends DefaultHandler {
     private final Consumer<List<Supplier>> consumer;
     private final List<Supplier> suppliers = new ArrayList<>();
     @Getter
-    private int processedSuppliersNumber = 0;
+    private int processed = 0;
     private Supplier currentSupplier;
 
     @Override
@@ -38,12 +38,12 @@ public class SupplierHandler extends DefaultHandler {
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase("Supplier") && currentSupplier != null) {
+        if (qName.equalsIgnoreCase(SUPPLIER) && currentSupplier != null) {
             suppliers.add(currentSupplier);
             currentSupplier = null;
 
             if (suppliers.size() == batchSize) {
-                flush();
+                processed += flush(consumer, suppliers);
             }
         }
     }
@@ -51,21 +51,7 @@ public class SupplierHandler extends DefaultHandler {
     @Override
     public void endDocument() throws SAXException {
         if (!suppliers.isEmpty()) {
-            flush();
+           processed += flush(consumer, suppliers);
         }
-    }
-
-    /**
-     * Passing current suppliers batch to consumer
-     */
-    private void flush() {
-        try {
-            consumer.accept(suppliers);
-        } catch (Exception e) {
-            log.error("{}", e.getMessage());
-        }
-        processedSuppliersNumber += suppliers.size();
-        log.debug("{}: processed {} entries", getClass().getSimpleName(), suppliers.size());
-        suppliers.clear();
     }
 }
