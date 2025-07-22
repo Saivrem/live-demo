@@ -1,6 +1,6 @@
 package biz.icecat.icedatav2.models.refs.cat_feat_list;
 
-import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
+import biz.icecat.icedatav2.mapping.extractors.XmlAttributeProcessor;
 import biz.icecat.icedatav2.models.refs.XmlElement;
 import lombok.Data;
 
@@ -20,13 +20,13 @@ public class Feature implements XmlElement<Feature> {
     private String intName;
 
     @Override
-    public List<XmlAttributeBiConsumer<Feature, ?>> getAttributeProcessors() {
+    public List<XmlAttributeProcessor<Feature, ?>> getAttributeProcessors() {
         return List.of(
-                new XmlAttributeBiConsumer<>("ID", Feature::setId, mapToLong),
-                new XmlAttributeBiConsumer<>("CategoryFeature_ID", Feature::setCategoryFeatureId, mapToLong),
-                new XmlAttributeBiConsumer<>("CategoryFeatureGroup_ID", Feature::setCategoryFeatureGroupId, mapToLong),
-                new XmlAttributeBiConsumer<>("IsHidden", Feature::setHidden, mapToBool),
-                new XmlAttributeBiConsumer<>("Mandatory", Feature::setMandatory, mapToBool)
+                new XmlAttributeProcessor<>("ID", Feature::setId, mapToLong),
+                new XmlAttributeProcessor<>("CategoryFeature_ID", Feature::setCategoryFeatureId, mapToLong),
+                new XmlAttributeProcessor<>("CategoryFeatureGroup_ID", Feature::setCategoryFeatureGroupId, mapToLong),
+                new XmlAttributeProcessor<>("IsHidden", Feature::setHidden, mapToBool),
+                new XmlAttributeProcessor<>("Mandatory", Feature::setMandatory, mapToBool)
         );
     }
 }

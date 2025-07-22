@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
+import static biz.icecat.icedatav2.utils.SaxUtils.processAttributes;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class LanguageHandler extends DefaultHandler implements CountedHandler<La
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equals(LANGUAGE)) {
             currentEntity = new Language();
-            populateFields(currentEntity, attributes);
+            processAttributes(currentEntity, attributes);
         }
     }
 

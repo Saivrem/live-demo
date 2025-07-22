@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
+import static biz.icecat.icedatav2.utils.SaxUtils.processAttributes;
 
 // TODO Very POC implementation, refactor!
 @Slf4j
@@ -32,7 +32,7 @@ public class SupplierHandler extends DefaultHandler  implements CountedHandler<S
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equalsIgnoreCase(SUPPLIER)) {
             currentEntity = new Supplier();
-            populateFields(currentEntity, attributes);
+            processAttributes(currentEntity, attributes);
         }
     }
 

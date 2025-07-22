@@ -1,6 +1,6 @@
 package biz.icecat.icedatav2.models.refs.cat_feat_list;
 
-import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
+import biz.icecat.icedatav2.mapping.extractors.XmlAttributeProcessor;
 import biz.icecat.icedatav2.models.refs.XmlElement;
 import lombok.Data;
 
@@ -19,10 +19,10 @@ public class Category implements XmlElement<Category> {
     List<Feature> featuresList = new ArrayList<>();
 
     @Override
-    public List<XmlAttributeBiConsumer<Category, ?>> getAttributeProcessors() {
+    public List<XmlAttributeProcessor<Category, ?>> getAttributeProcessors() {
         return List.of(
-                new XmlAttributeBiConsumer<>("ID", Category::setId, mapToLong),
-                new XmlAttributeBiConsumer<>("UNCATID", Category::setUncatid, Function.identity())
+                new XmlAttributeProcessor<>("ID", Category::setId, mapToLong),
+                new XmlAttributeProcessor<>("UNCATID", Category::setUncatid, Function.identity())
         );
     }
 }
