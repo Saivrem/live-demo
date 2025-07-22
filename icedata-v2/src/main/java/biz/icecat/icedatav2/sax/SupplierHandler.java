@@ -21,37 +21,37 @@ public class SupplierHandler extends DefaultHandler  implements CountedHandler<S
 
     private static final String SUPPLIER = "Supplier";
 
-    private final int batchSize;
-    private final Consumer<List<Supplier>> consumer;
-    private final List<Supplier> suppliers = new ArrayList<>();
     @Getter
     private int processed = 0;
-    private Supplier currentSupplier;
+    private final int batchSize;
+    private final Consumer<List<Supplier>> consumer;
+    private final List<Supplier> entities = new ArrayList<>();
+    private Supplier currentEntity;
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equalsIgnoreCase(SUPPLIER)) {
-            currentSupplier = new Supplier();
-            populateFields(currentSupplier, attributes);
+            currentEntity = new Supplier();
+            populateFields(currentEntity, attributes);
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase(SUPPLIER) && currentSupplier != null) {
-            suppliers.add(currentSupplier);
-            currentSupplier = null;
+        if (qName.equalsIgnoreCase(SUPPLIER) && currentEntity != null) {
+            entities.add(currentEntity);
+            currentEntity = null;
 
-            if (suppliers.size() == batchSize) {
-                processed += flush(consumer, suppliers);
+            if (entities.size() == batchSize) {
+                processed += flush(consumer, entities);
             }
         }
     }
 
     @Override
     public void endDocument() throws SAXException {
-        if (!suppliers.isEmpty()) {
-           processed += flush(consumer, suppliers);
+        if (!entities.isEmpty()) {
+           processed += flush(consumer, entities);
         }
     }
 }

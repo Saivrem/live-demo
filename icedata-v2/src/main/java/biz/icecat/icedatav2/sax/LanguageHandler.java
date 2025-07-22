@@ -24,33 +24,32 @@ public class LanguageHandler extends DefaultHandler implements CountedHandler<La
     private int processed = 0;
     private final int batchSize;
     private final Consumer<List<Language>> consumer;
-    private final List<Language> languages = new ArrayList<>();
-
-    private Language currentLanguage;
+    private final List<Language> entities = new ArrayList<>();
+    private Language currentEntity;
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equals(LANGUAGE)) {
-            currentLanguage = new Language();
-            populateFields(currentLanguage, attributes);
+            currentEntity = new Language();
+            populateFields(currentEntity, attributes);
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equals(LANGUAGE) && currentLanguage != null) {
-            languages.add(currentLanguage);
+        if (qName.equals(LANGUAGE) && currentEntity != null) {
+            entities.add(currentEntity);
 
-            if (languages.size() == batchSize) {
-                processed += flush(consumer, languages);
+            if (entities.size() == batchSize) {
+                processed += flush(consumer, entities);
             }
         }
     }
 
     @Override
     public void endDocument() throws SAXException {
-        if (!languages.isEmpty()) {
-            processed += flush(consumer, languages);
+        if (!entities.isEmpty()) {
+            processed += flush(consumer, entities);
         }
     }
 }
