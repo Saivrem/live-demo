@@ -1,9 +1,13 @@
 package biz.icecat.icedatav2.utils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
@@ -41,6 +45,13 @@ public class FileUtils {
         } catch (IOException e) {
             log.warn("Failed to create {}", path);
             throw new RuntimeException(e);
+        }
+    }
+
+    @SneakyThrows
+    public static <T> T loadResourceFromFile(String path, ObjectMapper objectMapper, TypeReference<T> typeRef) {
+        try (InputStream stream = FileUtils.class.getClassLoader().getResourceAsStream(path)) {
+            return objectMapper.readValue(stream, typeRef);
         }
     }
 }
