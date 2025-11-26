@@ -13,9 +13,9 @@ import java.util.Optional;
 @UtilityClass
 public class DateUtils {
 
-    public final static ZoneId UTC = ZoneId.of("UTC");
+    public static final ZoneId UTC = ZoneId.of("UTC");
 
-    private final static DateTimeFormatter FORMATTER = new DateTimeFormatterBuilder()
+    private static final DateTimeFormatter FORMATTER = new DateTimeFormatterBuilder()
             .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             .appendOptional(DateTimeFormatter.ISO_ZONED_DATE_TIME)
             .appendOptional((DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))

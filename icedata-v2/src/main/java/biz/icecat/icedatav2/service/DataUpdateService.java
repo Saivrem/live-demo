@@ -23,7 +23,7 @@ public abstract class DataUpdateService {
     @Value("${icedata-v2.batch-size}")
     protected Integer batchSize;
 
-    public abstract int update() throws Exception;
+    public abstract int update();
 
     protected int processFile(DefaultHandler handler, String targetFile, String extractedFileName) {
         SAXParser saxParser = SaxUtils.getParser();
@@ -36,6 +36,7 @@ public abstract class DataUpdateService {
         } catch (IOException e) {
             log.warn("Failed to process {}", extractedFileName, e);
         }
+        SaxUtils.removeParser();
         return getProcessed(handler);
     }
 

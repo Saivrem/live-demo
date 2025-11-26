@@ -19,12 +19,6 @@ public class DatabaseUpdateTask {
     @SneakyThrows
     @Scheduled(cron = "${icedata-v2.cron}")
     public void updateDatabase() {
-        services.forEach(service -> {
-            try {
-                service.update();
-            } catch (Exception e) {
-                log.warn("Couldn't finish update {}", service.getClass().getSimpleName());
-            }
-        });
+        services.forEach(DataUpdateService::update);
     }
 }

@@ -30,7 +30,7 @@ public class LanguagesDataUpdateService extends DataUpdateService {
     @Measured(methodName = "Update Languages")
     public int update() {
         LanguageHandler handler = new LanguageHandler(batchSize,
-                (languages) -> repository.saveAll(converter.domainsListToListOfEntities(languages))
+                languages -> repository.saveAll(converter.domainsListToListOfEntities(languages))
         );
 
         return processFile(handler, languagesFile, "languages_list.xml");

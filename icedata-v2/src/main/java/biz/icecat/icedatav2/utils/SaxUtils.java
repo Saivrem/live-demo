@@ -13,7 +13,7 @@ import javax.xml.parsers.SAXParserFactory;
 @UtilityClass
 public class SaxUtils {
 
-    private final static ThreadLocal<SAXParser> THREAD_LOCAL_PARSER = ThreadLocal.withInitial(() -> {
+    private static final ThreadLocal<SAXParser> THREAD_LOCAL_PARSER = ThreadLocal.withInitial(() -> {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             return factory.newSAXParser();
@@ -26,11 +26,15 @@ public class SaxUtils {
         return THREAD_LOCAL_PARSER.get();
     }
 
+    public void removeParser() {
+        THREAD_LOCAL_PARSER.remove();
+    }
+
     /**
      * Populate fields of passed Supplier entity from attributes
      *
-     * @param object        {@link T} is a generic type calculated from {@link XmlAttributeProcessor} passed into method
-     * @param attributes    {@link Attributes} of current XML element
+     * @param object     {@link T} is a generic type calculated from {@link XmlAttributeProcessor} passed into method
+     * @param attributes {@link Attributes} of current XML element
      */
     public static <T extends XmlElement<T>> void processAttributes(T object, Attributes attributes) {
         if (object == null) return;
