@@ -1,0 +1,13 @@
+.git
+.env
+.idea
+**/.DS_Store
+**/.gradle
+launchpad/uploads/*
+!launchpad/uploads/index.html
+
+icedata-v2/build
+icedata-v2/out
+icedata-v2/tmp
+icedata-v2/uploads
+icedata-v2/src/main/resources/application-local.yml

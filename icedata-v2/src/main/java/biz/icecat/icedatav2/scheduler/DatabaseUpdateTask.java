@@ -2,7 +2,6 @@ package biz.icecat.icedatav2.scheduler;
 
 import biz.icecat.icedatav2.service.DataUpdateService;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,11 +13,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DatabaseUpdateTask {
 
-    private final List<DataUpdateService> services;
+    private final List<DataUpdateService> dataUpdateServices;
 
-    @SneakyThrows
-    @Scheduled(cron = "${icedata-v2.cron}")
+    @Scheduled(cron = "${icedata-v2.cron}", zone = "${icedata-v2.update-zone:UTC}")
     public void updateDatabase() {
-        services.forEach(DataUpdateService::update);
+        for (DataUpdateService dataUpdateService : dataUpdateServices) {
+            try {
+                dataUpdateService.update();
+            } catch (RuntimeException exception) {
+                log.error("Scheduled update failed for {}; continuing with other sources",
+                        dataUpdateService.getClass().getSimpleName(), exception);
+            }
+        }
     }
 }

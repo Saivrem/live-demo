@@ -6,7 +6,7 @@ tmp
 generated*
 launchpad/bundled
 launchpad/uploads/*
-!launchpad/uploads/.htaccess
+!launchpad/uploads/index.html
 .DS_Store
 
 
@@ -46,3 +46,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+icedata-v2/uploads/
+
+__pycache__/

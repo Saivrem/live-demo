@@ -29,8 +29,9 @@ public class LoadingUtils {
      * @throws IOException Exception is thrown upper
      */
     public static void downloadUrl(String link, Path path) throws IOException {
-        InputStream stream = new URL(link).openStream();
-        Files.copy(stream, path, REPLACE_EXISTING);
+        try (InputStream downloadStream = new URL(link).openStream()) {
+            Files.copy(downloadStream, path, REPLACE_EXISTING);
+        }
     }
 
     /**
@@ -51,16 +52,20 @@ public class LoadingUtils {
 
     @NotNull
     public static Path getDownloadedFile(String file, String unGzipped, ApplicationProperties properties) throws IOException {
-        Path gzippedLanguages = Path.of(TEMP_DIR, file);
-        createTempFile(gzippedLanguages);
+        return getDownloadedFile(file, unGzipped, properties, Path.of(TEMP_DIR));
+    }
+
+    public static Path getDownloadedFile(String file, String unGzipped, ApplicationProperties properties, Path tempDirectory) throws IOException {
+        Path compressedFile = tempDirectory.resolve(file);
+        createTempFile(compressedFile);
 
         authenticate(properties.getServiceUserName(), properties.getServicePassword());
-        downloadUrl(properties.resolveIcecatLink(file), gzippedLanguages);
+        downloadUrl(properties.resolveIcecatLink(file), compressedFile);
 
-        Path unzippedTempFile = Path.of(TEMP_DIR, unGzipped);
-        unGzip(gzippedLanguages, unzippedTempFile);
-        deleteIfExists(gzippedLanguages);
+        Path extractedFile = tempDirectory.resolve(unGzipped);
+        unGzip(compressedFile, extractedFile);
+        deleteIfExists(compressedFile);
 
-        return unzippedTempFile;
+        return extractedFile;
     }
 }

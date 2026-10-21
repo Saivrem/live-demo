@@ -4,10 +4,16 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.Optional;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
+import java.time.temporal.TemporalAccessor;
+import java.util.List;
 
 @Slf4j
 @UtilityClass
@@ -15,43 +21,44 @@ public class DateUtils {
 
     public static final ZoneId UTC = ZoneId.of("UTC");
 
-    private static final DateTimeFormatter FORMATTER = new DateTimeFormatterBuilder()
-            .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            .appendOptional(DateTimeFormatter.ISO_ZONED_DATE_TIME)
-            .appendOptional((DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-            .toFormatter();
+    private static final List<DateTimeFormatter> FORMATTERS = List.of(
+            DateTimeFormatter.ISO_ZONED_DATE_TIME,
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+            DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss").withResolverStyle(ResolverStyle.STRICT)
+    );
 
     public static LocalDateTime localDateTime(Long dateTime) {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTime), UTC);
     }
 
+    /** Normalize timestamps with an explicit offset to UTC; unzoned input is UTC. */
     public static LocalDateTime parse(String dateTimeString) {
-        if (StringUtils.isBlank(dateTimeString)) {
-            return null;
-        }
-
-        try {
-            return LocalDateTime.parse(dateTimeString, FORMATTER);
-        } catch (Exception e) {
-            log.warn("Couldn't produce LocalDateTime out of {}", dateTimeString);
-            return null;
-        }
+        Long timestamp = parseToLong(dateTimeString);
+        return timestamp == null ? null : localDateTime(timestamp);
     }
 
     public static Long parseToLong(String dateTimeString) {
         if (StringUtils.isBlank(dateTimeString)) {
             return null;
         }
-
-        try {
-            LocalDateTime localDateTime = LocalDateTime.parse(dateTimeString, FORMATTER);
-            return localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-        } catch (Exception e) {
-            log.warn("Couldn't parse Zoned Date Time out of {}", dateTimeString);
-            return Optional.ofNullable(parse(dateTimeString))
-                    .map(ldt -> ldt.atZone(UTC).toInstant().toEpochMilli())
-                    .orElse(null);
+        for (DateTimeFormatter formatter : FORMATTERS) {
+            try {
+                TemporalAccessor parsedDateTime = formatter.parseBest(dateTimeString, ZonedDateTime::from, LocalDateTime::from);
+                Instant instant = toInstant(parsedDateTime);
+                return instant.toEpochMilli();
+            } catch (DateTimeParseException ignored) {
+                // Try the next supported Icecat/API timestamp format.
+            }
         }
+        log.warn("Couldn't parse timestamp {}", dateTimeString);
+        return null;
+    }
+
+    private static Instant toInstant(TemporalAccessor parsedDateTime) {
+        if (parsedDateTime instanceof ZonedDateTime zonedDateTime) {
+            return zonedDateTime.toInstant();
+        }
+        return ((LocalDateTime) parsedDateTime).toInstant(ZoneOffset.UTC);
     }
 
     public static String format(Long timestamp, ZoneId zone) {
