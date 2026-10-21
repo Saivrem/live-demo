@@ -1,51 +1,296 @@
-# Live Demo
+# Live Demo / Icedata V2
 
-## Icedata V2
+A web interface for working with Icecat. Apache serves the pages, Java/Spring handles the API and file uploads, and MySQL stores reference data. Fail2ban blocks common scanners using Apache access logs. PHP is no longer required.
 
-### Introduction
-This project if a full representation of live-demo project. Codebase is split between several modules, including launchpad for web, icedata-v2 for java application. All projects could be assembled and run with docker compose file provided.
+## Quick start on a virtual machine
 
-### Prerequisites
+These instructions target a Linux server. Run all commands **in a terminal on the server**. You need Docker Engine with Compose v2, internet access, and Icecat credentials.
 
-#### Common Setup:
-- All components of this project share the same `.env` file, which is **not included** for security reasons. The project expects specific environment variables to be set. 
-  - see `env_setup.sh` for reference, it should be also used to set up variables in local env, however, I'd suggest to stick with `.env` file and compose 
+### 1. Prepare the server
 
-#### Database Requirements:
-- The target machine should have a **MySQL server** installed and properly configured.
+Install Docker Engine and the Compose plugin using the [official Ubuntu instructions](https://docs.docker.com/engine/install/ubuntu/). For another Linux distribution, select its installation guide in the Docker documentation. You do not need to install Java, Gradle, MySQL, or Apache separately: they are built or run inside containers.
 
-#### Web Server Requirements:
-- The target machine should be capable of running a web server with the Launchpad project preinstalled. The web-related files can be found in the `launchpad` package.
+The commands below also require `bash`, `openssl`, `curl`, and the `nano` editor. On Ubuntu, install them with `sudo apt install bash openssl curl nano`.
 
-#### Backend Setup:
-- The backend is located in the `icedata-v2` package and relies on the environment variables specified in the common setup section above.
-- App configuration is split in several parts in `application.yml`: 
-  - general spring and other dependencies configs like `spring`, `management`, `server`
-  - app-specific config in same file `icedata-v2` part
-  - files to work with in `files` segment
+Check your installation:
 
-### Local Development
-
-For local development, a `docker-compose` file is provided. The application can be started as a full system or by individual services.
-
-#### Running only selected services
-To run only selected services via docker compose you need to use service name, e.g.
 ```bash
-
-docker compose up -d database java
+docker info
+docker compose version
 ```
 
-#### Full System Run:
-To build and run the entire system, use the following script:
-```bash
+Both commands should finish without errors. If you get `permission denied`, configure user access using the [Docker post-installation instructions](https://docs.docker.com/engine/install/linux-postinstall/) and reconnect over SSH. Docker access grants administrative privileges on the server.
 
+The full stack requires a regular, rootful Docker Engine and nftables support in the Linux kernel: fail2ban uses host networking and `NET_ADMIN`. Rootless Docker is not supported by this configuration. You can develop and run tests on macOS/Windows, but validate public-facing protection on the target Linux VM.
+
+Allow inbound **TCP port 80** in your hosting provider's network settings. Keep SSH access available. **Do not expose ports 3306 or 8086 publicly.**
+
+### 2. Copy the project
+
+Clone the repository or copy the complete project to the server. For example, if the project directory is named `live-demo`:
+
+```bash
+cd live-demo
+ls assemble.sh docker-compose.yml env_setup.sh
+```
+
+All three files should exist. Run the remaining commands from this directory, next to `docker-compose.yml`.
+
+### 3. Create and edit the configuration
+
+```bash
+bash env_setup.sh
+nano .env
+```
+
+See [`.env.example`](.env.example) for an annotated template. It separates settings into four groups: Icecat credentials, export paths, database passwords, and the internal network.
+
+The script creates `.env` next to itself using this template, generates random database passwords, and sets file permissions to `600`. It works from any directory. Do not copy the example directly to `.env`: the script must replace the `__GENERATE_*__` placeholders. For help, run `bash env_setup.sh --help`.
+
+Replace these two values in the editor:
+
+| Variable | What to enter |
+| --- | --- |
+| `ICECAT_USER` | Your Icecat account login instead of `YOUR_ICECAT_LOGIN` |
+| `ICECAT_PASS` | Your Icecat password instead of `YOUR_ICECAT_PASSWORD` |
+
+Keep the other defaults for a standard deployment. If your account uses a different export directory, adjust `ICECAT_BASE` and `ICECAT_REPO`. Use single quotes around a password containing `$` so Compose does not interpret part of it as a variable.
+
+In `nano`, press **Ctrl+O**, then **Enter** to save, and **Ctrl+X** to exit.
+
+If `.env` already exists, `env_setup.sh` reports this and leaves it unchanged. Open the existing file instead. **Do not regenerate passwords for an existing database:** changing `.env` does not update users or passwords in the saved MySQL database.
+
+`.env` contains secrets. Do not commit it or publish its contents in logs or messages.
+
+### 4. Start the service
+
+```bash
 bash assemble.sh
 ```
-This script will:
-1. Remove old artifacts.
-2. Build the new one.
-3. Execute the `docker-compose` file.
 
-Also `assemple.sh` recognize several cmd arguments:
-  - `-c` is going to clean up all previous docker containers and volumes (be aware that database and users will be wiped as well)
-  - `-t` runs `./gradlew clean test` before application rollout
+The first run downloads images and dependencies, builds Java, creates the database, and applies migrations. This can take several minutes. The script succeeds when the services are ready; after starting containers, it waits up to 180 seconds for readiness.
+
+Available options:
+
+| Command | What it does |
+| --- | --- |
+| `bash assemble.sh` | Builds images and starts the stack |
+| `bash assemble.sh -t` | Runs Java tests in Docker, then builds and starts the stack |
+| `bash assemble.sh -c` | Builds images, stops existing containers, and recreates them while preserving data |
+| `bash assemble.sh -t -c` | Runs tests, builds images, and recreates containers |
+| `bash assemble.sh --help` | Displays help |
+
+A test or build failure stops the script before any running containers are shut down. **`-t` does not mean “tests only”:** the service starts after successful tests. See the development section below for standalone tests.
+
+To start directly with Compose:
+
+```bash
+docker compose up -d --build --wait --wait-timeout 180
+```
+
+### 5. Check the result
+
+```bash
+docker compose ps
+curl -fsS http://127.0.0.1/icedata/api/v2/actuator/health
+```
+
+The list should show `database`, `java`, `launchpad`, and `fail2ban` running. The database, Java, and fail2ban should be `healthy`; Apache has no separate healthcheck. The health request should return JSON containing `"status":"UP"`.
+
+Open **`http://SERVER_IP/`** in your browser, replacing `SERVER_IP` with the VM's actual address. Using `localhost` in a browser on your computer refers to your computer, not the server.
+
+**Reference data is initially empty in a new database.** Import runs daily at **10:00 UTC**, not at application startup. Wait for the next scheduled run, then check:
+
+```bash
+docker compose logs --tail=200 java
+curl -fsS http://127.0.0.1/icedata/api/v2/languages
+```
+
+Administrative API access requires the `ICEDATA_ADMIN` authority: this covers `/icedata/api/v2/admin` (including subpaths) and `POST /icedata/api/v2/suppliers`. Spring Security returns `403` without that authority. No users or login flow are configured, and no default user is generated. Administrative writes also require a valid CSRF token. Apache continues to return `404` for admin routes; the retired admin controller remains a `404` stub even after authorization. There is no manual import button. Public read endpoints and uploads remain available without authentication.
+
+## Troubleshooting
+
+Start by checking service status and recent logs:
+
+```bash
+docker compose ps -a
+docker compose logs --tail=100 database java launchpad fail2ban
+```
+
+To follow logs as they arrive:
+
+```bash
+docker compose logs -f --tail=100 java
+```
+
+**Ctrl+C** stops following logs; the service keeps running.
+
+| Symptom | What to check |
+| --- | --- |
+| `Cannot connect to the Docker daemon` | Is Docker running? On Linux with systemd: `sudo systemctl start docker` |
+| `Missing .env` | Complete step 3 and make sure `.env` is next to `assemble.sh` |
+| `port is already allocated` / `address already in use` | Check whether another service uses port 80, 3306, or 8086, or another copy of this project is running |
+| MySQL or Java does not become `healthy` | Read the `database` and `java` logs; verify that `.env` passwords match those in the existing database |
+| Readiness timeout | Containers may still be starting. Check `ps -a` and logs, resolve the cause, then run `bash assemble.sh` again |
+| `curl` works on the server, but the site is unreachable externally | Check the IP address, inbound TCP 80 in your provider's network settings, and the `http://` URL |
+| Empty language list | Has a scheduled 10:00 UTC import run since deployment? Check Icecat credentials, export paths, and Java import logs |
+| Fail2ban reports nftables errors or `Operation not permitted` | Use a Linux VM with regular Docker Engine. Check kernel nftables support and that Compose still sets `network_mode: host` and `NET_ADMIN` |
+
+Do not delete the database volume to fix a startup error: it contains your data.
+
+## Updating and stopping
+
+Back up the database and `.env` before updating. If the project was cloned with Git and your local changes are saved:
+
+```bash
+git pull --ff-only
+bash assemble.sh -t
+```
+
+The build recreates services that have changed. Frontend files are packaged in the Apache image, so changes under `launchpad/` appear after rebuilding. To update only the frontend:
+
+```bash
+docker compose up -d --build launchpad
+```
+
+Stop the stack while keeping data:
+
+```bash
+docker compose down
+```
+
+Start the existing images again:
+
+```bash
+docker compose up -d --wait --wait-timeout 180
+```
+
+**Do not add `-v` / `--volumes` to `docker compose down`: it deletes data volumes.** Avoid changing the project directory name or Compose project name unnecessarily: these affect volume selection, and a different project may create a new, empty database.
+
+## Data storage and ports
+
+| Component | Access |
+| --- | --- |
+| Apache / website | Public port 80 |
+| Spring API | Through Apache; direct access only on the server at `127.0.0.1:8086` |
+| MySQL | Only on the server at `127.0.0.1:3306` |
+| Fail2ban | No HTTP port; manage it with `docker compose exec` |
+
+Within Compose, containers connect using `database:3306` and `java:8086`. Do not replace these addresses with `localhost`: inside a container, it refers to that container itself.
+
+| Compose volume | Contents |
+| --- | --- |
+| `icedata-v2-mysql-volume` | MySQL database |
+| `icedata-v2-uploads-volume` | Uploaded files |
+| `apache-logs` | Apache logs |
+| `fail2ban-state` | Fail2ban state |
+
+Docker prefixes volume names with the project name. Normal restarts, rebuilds, and `assemble.sh -c` preserve volumes. Persistent volumes are not a substitute for backups.
+
+## File uploads
+
+The upload listing is available at `/uploads/`. Java accepts nonempty `csv`, `xls`, `xlsx`, `docx`, and `doc` files, up to **20 MiB per file** and **100 MiB per multipart request**. Stored files receive unique names and are downloaded as attachments.
+
+**Files are public and deleted daily at 00:00 UTC**, including files uploaded shortly before midnight. This feature is intended for temporary file sharing.
+
+API:
+
+- `POST /icedata/api/v2/uploads` — multipart field `files[]`.
+- `GET /icedata/api/v2/uploads` — a list containing `name`, `url`, and `size`.
+- The address in `url` downloads the file.
+
+Old files in `launchpad/uploads/` are not migrated automatically. Save any files you need before upgrading, then upload them through the new form. Old `/index.php?...` links redirect to the home page while preserving query parameters. The statistics page and Status button have been removed.
+
+## Fail2ban and HTTPS
+
+The project builds its own fail2ban image. It reads Apache access logs and enables two filters:
+
+| Jail | What it detects | Initial ban |
+| --- | --- | --- |
+| `launchpad-scanners` | Probes for phpMyAdmin, Adminer, WordPress, PHPUnit/CGI, `.env`, `.git`, backups, and sensitive service endpoints | 5 matches within 60 seconds → 1 hour |
+| `launchpad-exploits` | Directory traversal attempts and probes for system files | 2 matches within 60 seconds → 1 day |
+
+Repeated bans increase up to 7 days. An ordinary 404 alone does not trigger a ban. Filters inspect the request target and response status; they target specific scanners, not every form of DDoS, SQL injection, or XSS.
+
+Check the jails:
+
+```bash
+docker compose exec fail2ban fail2ban-client status
+docker compose exec fail2ban fail2ban-client status launchpad-scanners
+docker compose exec fail2ban fail2ban-client status launchpad-exploits
+```
+
+Unban an address (replace the example IP and select the jail where it is banned):
+
+```bash
+docker compose exec fail2ban fail2ban-client set launchpad-scanners unbanip 198.51.100.23
+```
+
+Fail2ban manages separate nftables tables, `icedata_f2b_input` and `icedata_f2b_forward`, for TCP ports 80/443 and both IPv4 and IPv6. It does not need the Docker socket. Apache and container logs have size limits. Do not run a second fail2ban instance managing the same tables.
+
+The current setup assumes **clients connect directly to Apache**. Before placing a CDN or another proxy in front, configure trusted proxy addresses, client IP handling, and a ban action appropriate for that topology. Incoming `X-Forwarded-For` headers are not trusted.
+
+**HTTPS is not configured yet.** The site serves HTTP on port 80. For your domain, configure a certificate and TLS in Apache, publish port 443, and allow it in your provider's network settings. Including port 443 in fail2ban rules does not enable HTTPS.
+
+## Development tests
+
+### Java tests without starting the application stack
+
+You need a local JDK 17 and a running Docker Engine:
+
+```bash
+cd icedata-v2
+./gradlew test jacocoTestReport
+cd ..
+```
+
+Tests create a disposable MySQL container and use local XML/gzip fixtures and isolated directories. They do not need the production database or Icecat credentials.
+
+Local test reports:
+
+- `icedata-v2/build/reports/tests/test/index.html` — test results.
+- `icedata-v2/build/reports/jacoco/test/html/index.html` — code coverage.
+
+### Java tests entirely inside Docker
+
+No local JDK is required. Run from the project root:
+
+```bash
+docker build --target test -f DockerfileJava -t codex-live-demo-java-tests .
+docker run --rm \
+  --add-host host.docker.internal:host-gateway \
+  -e DOCKER_HOST=unix:///var/run/docker.sock \
+  -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal \
+  -e TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  codex-live-demo-java-tests
+```
+
+Only the test container uses the Docker socket to create the disposable database. Results appear in the terminal; HTML reports from this run are deleted with the container. Use the local test command above to keep reports on disk.
+
+### Full stack and firewall smoke tests
+
+You need Docker and Python 3. Run from the project root with `.env` prepared:
+
+```bash
+docker build -f DockerfileJava -t codex-live-demo-java-check .
+docker build -f DockerfileWeb -t codex-live-demo-apache-check .
+docker build -t codex-live-demo-fail2ban-check fail2ban
+python3 scripts/test-stack.py
+python3 scripts/test-security.py
+```
+
+The first script creates a separate Compose project with a fresh database and random loopback ports, then checks readiness and uploads/downloads through Apache. The second checks bans triggered by real HTTP requests, unbanning, and IPv6 rules. Both use isolated test resources and remove them afterwards. Firewall tests run in a private network namespace without changing the host firewall. Validate external access and bans separately on the target VM after deployment.
+
+## GitHub Actions
+
+The [Java and Docker CI](.github/workflows/gradle.yml) workflow runs on pushes to `main`, pull requests targeting `main`, and manual runs through **Actions → Java and Docker CI → Run workflow**.
+
+It runs two independent checks:
+
+- **Java tests and build** — Java 17, Gradle wrapper validation, tests with disposable MySQL, coverage reports, and JAR packaging.
+- **Docker stack and fail2ban** — temporary `.env` generation, Compose validation, three image builds, an isolated test stack, and HTTP ban/unban checks.
+
+These checks require no GitHub Secrets. Import tests use local fixtures, not a real Icecat account. The workflow validates the build; it does not publish images or deploy to your VM.
+
+The completed run's **Artifacts** section contains `java-test-reports` and `docker-test-logs`, retained for 14 days. Upload steps also run after failures; a report may be absent if the build failed before creating it. In the Java report archive, open `reports/tests/test/index.html` or `reports/jacoco/test/html/index.html`.

@@ -1,49 +1,61 @@
 #!/bin/bash
+set -euo pipefail
 
-########################################
-#        Generate .env File            #
-########################################
+project_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+environment_file="$project_directory/.env"
+example_file="$project_directory/.env.example"
 
-ENV_FILE=".env"
+usage() {
+    cat <<'USAGE'
+Usage: bash env_setup.sh
 
-FORCE=false
-for arg in "$@"; do
-  if [[ "$arg" == "-f" || "$arg" == "--force" ]]; then
-    FORCE=true
-  fi
-done
+Creates .env next to this script using .env.example.
+MySQL and Flyway passwords are generated automatically.
+After creation, fill in ICECAT_USER and ICECAT_PASS in .env.
+An existing .env is never overwritten.
 
-if [ -f "$ENV_FILE" ] && [ "$FORCE" = false ]; then
-  echo "$ENV_FILE already exists. Use -f or --force to overwrite."
-  exit 1
+  -h, --help  Show this help.
+USAGE
+}
+
+if [[ $# -gt 0 ]]; then
+    case "$1" in
+        -h|--help) usage; exit 0 ;;
+        *) echo "Unknown argument: $1. Overwriting .env with --force is disabled." >&2; usage >&2; exit 2 ;;
+    esac
 fi
 
-cat << EOF > $ENV_FILE
-# ---------- Database Configuration ----------
-DB_USER="db_user"                            # Username for the database
-DB_PASS="db_pass"                            # Password for the database user
-DB_SCHEMA="db_name"                          # Database schema (PostgreSQL) or database name (MySQL)
-DB_PORT="5432"                               # Port number for the database connection (default for PostgreSQL is 5432)
-DB_HOST="localhost"                          # Host address of the database
-DB_PARAMS="?sslmode=disable&timezone=UTC"    # Connection parameters (e.g., SSL mode, timezone)
-FLYWAY_USER="flyway"                         # User for Flyway migration scripts
-FLYWAY_PASSWORD="flyway"                     # Password for Flyway user
+if [[ -e "$environment_file" || -L "$environment_file" ]]; then
+    echo "File $environment_file already exists and has been left unchanged."
+    echo "Open it in an editor and check ICECAT_USER and ICECAT_PASS."
+    echo "Do not regenerate passwords for an existing database."
+    exit 0
+fi
 
-# ---------- MySQL Configuration -----------
-MYSQL_ROOT_PASSWORD="root_pass"              # Root password for MySQL, needed during initial setup
+if [[ ! -f "$example_file" ]]; then
+    echo "File $example_file not found. Copy the complete project, including hidden files." >&2
+    exit 1
+fi
+command -v openssl >/dev/null || { echo "openssl is required. On Ubuntu: sudo apt install openssl" >&2; exit 1; }
 
-# ---------- Icecat Configuration ----------
-ICECAT_USER="shop_user"                      # Username for the Icecat shop service
-ICECAT_PASS="shop_user_pass"                 # Password for the Icecat shop service
-ICECAT_BASE="https://data.icecat.biz/export/"# Base path to data repo
-ICECAT_REPO="freexml/"                       # Or level4 or whatever
-LANG_LIST="refs/LanguageList.xml.gz"         # Language list file
-SUPPLIERS_LIST="refs/SuppliersList.xml.gz"   # Suppliers list file
-SUPPLIER_MAPPING="EN/supplier_mapping.xml"   # EN is hardcoded, think about it
+generated_db_password=$(openssl rand -hex 24)
+generated_flyway_password=$(openssl rand -hex 24)
+generated_root_password=$(openssl rand -hex 24)
 
-# ---------- Java Configuration ------------
-JAVA_PORT="8080"                             # Port used by the Java Icedata service
-JAVA_HOST="127.0.0.1"                        # Host address where the Icedata service is running
-EOF
+umask 077
+temporary_file=$(mktemp "$project_directory/.env.tmp.XXXXXX")
+trap 'rm -f -- "$temporary_file"' EXIT
+sed \
+    -e "s/__GENERATE_DB_PASSWORD__/$generated_db_password/g" \
+    -e "s/__GENERATE_FLYWAY_PASSWORD__/$generated_flyway_password/g" \
+    -e "s/__GENERATE_ROOT_PASSWORD__/$generated_root_password/g" \
+    "$example_file" > "$temporary_file"
 
-echo ".env file has been successfully generated at $ENV_FILE"
+# Publish the complete file without overwriting a concurrently created .env.
+ln -- "$temporary_file" "$environment_file"
+echo "Created $environment_file (owner-only permissions: 600)."
+echo "Next steps:"
+printf '  1. Open the file: nano "%s"\n' "$environment_file"
+echo "  2. Replace YOUR_ICECAT_LOGIN and YOUR_ICECAT_PASSWORD with your credentials."
+echo "  3. Save: Ctrl+O, Enter. Exit: Ctrl+X."
+printf '  4. Run: bash "%s/assemble.sh"\n' "$project_directory"

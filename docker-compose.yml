@@ -3,17 +3,24 @@ services:
     image: mysql:8.4
     container_name: "icedata-v2-db"
     restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     env_file:
       - .env
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_SCHEMA:?Set DB_SCHEMA in .env}
+      MYSQL_USER: ${DB_USER:?Set DB_USER in .env}
+      MYSQL_PASSWORD: ${DB_PASS:?Set DB_PASS in .env}
     volumes:
       - icedata-v2-mysql-volume:/var/lib/mysql
-      # init_db.sql is not necessary if DB is preconfigured and user is created
-      # however, for the local development this script might be useful
-      # - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./docker/mysql/10-flyway.sh:/docker-entrypoint-initdb.d/10-flyway.sh:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD-SHELL", 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql --protocol=TCP -h 127.0.0.1 -u "$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT 1" >/dev/null']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,15 +32,30 @@ services:
       context: .
     container_name: "icedata-v2-java"
     restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     env_file:
       - .env
     ports:
-      - "8086:8086"
+      - "127.0.0.1:8086:8086"
+    environment:
+      UPLOADS_DIRECTORY: /var/lib/icedata/uploads
+      DB_HOST: database
+      DB_PORT: 3306
+      JAVA_HOST: http://java
+      JAVA_PORT: 8086
+      ICEDATA_V2_CRON: "0 0 10 * * ?"
+      ICEDATA_V2_UPDATE_ZONE: UTC
+    volumes:
+      - icedata-v2-uploads-volume:/var/lib/icedata/uploads
     depends_on:
       database:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "${JAVA_HOST}:${JAVA_PORT}/icedata/api/v2/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8086/icedata/api/v2/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,17 +67,48 @@ services:
         dockerfile: DockerfileWeb
     container_name: "icedata-v2-web"
     restart: always
-    env_file:
-        - .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "80:80"
     volumes:
-      - ./launchpad:/var/www/html
+      - apache-logs:/var/log/apache2
     depends_on:
       java:
         condition: service_healthy
-      database:
-        condition: service_healthy
+
+  fail2ban:
+    build:
+      context: ./fail2ban
+    container_name: icedata-v2-fail2ban
+    restart: unless-stopped
+    network_mode: host
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - apache-logs:/var/log/apache2:ro
+      - fail2ban-state:/var/lib/fail2ban
+    healthcheck:
+      test: ["CMD", "fail2ban-client", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      launchpad:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
+  apache-logs:
+  fail2ban-state:
   icedata-v2-mysql-volume:
+  icedata-v2-uploads-volume:

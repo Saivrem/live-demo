@@ -15,7 +15,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.io.FileWriter;
 import java.nio.file.Path;
 
-import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
+import static biz.icecat.icedatav2.utils.SaxUtils.processAttributes;
 
 /**
  * This is WIP handler, currently not in use
@@ -53,17 +53,17 @@ public class CategoryFeatureListHandler extends DefaultHandler {
         switch (qName) {
             case "Category" -> {
                 currentCategory = new Category();
-                populateFields(currentCategory, attributes);
+                processAttributes(currentCategory, attributes);
             }
             case "Feature" -> {
                 inFeature = true;
                 currentFeature = new Feature();
-                populateFields(currentFeature, attributes);
+                processAttributes(currentFeature, attributes);
             }
             case "FeatureGroup" -> inFeatureGroup = true;
             case "Name" -> {
                 Name name = new Name();
-                populateFields(name, attributes);
+                processAttributes(name, attributes);
                 if (name.getLangId() == 1) {
                     if (inFeature) {
                         currentFeature.setIntName(name.getValue());

@@ -1,6 +1,6 @@
 package biz.icecat.icedatav2.models.refs.cat_feat_list;
 
-import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
+import biz.icecat.icedatav2.mapping.extractors.XmlAttributeProcessor;
 import biz.icecat.icedatav2.models.refs.XmlElement;
 import lombok.Data;
 
@@ -16,11 +16,11 @@ public class Name implements XmlElement<Name> {
     private String value;
 
     @Override
-    public List<XmlAttributeBiConsumer<Name, ?>> getAttributeProcessors() {
+    public List<XmlAttributeProcessor<Name, ?>> getAttributeProcessors() {
         return List.of(
-                new XmlAttributeBiConsumer<>("ID", Name::setId, mapToLong),
-                new XmlAttributeBiConsumer<>("langid", Name::setLangId, mapToLong),
-                new XmlAttributeBiConsumer<>("Value", Name::setValue, Function.identity())
+                new XmlAttributeProcessor<>("ID", Name::setId, mapToLong),
+                new XmlAttributeProcessor<>("langid", Name::setLangId, mapToLong),
+                new XmlAttributeProcessor<>("Value", Name::setValue, Function.identity())
         );
     }
 }

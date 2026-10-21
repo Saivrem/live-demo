@@ -1,6 +1,6 @@
 package biz.icecat.icedatav2.models.refs.languages;
 
-import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
+import biz.icecat.icedatav2.mapping.extractors.XmlAttributeProcessor;
 import biz.icecat.icedatav2.models.refs.XmlElement;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -24,12 +24,12 @@ public class Language implements XmlElement<Language> {
     private List<LanguageName> names = new ArrayList<>();
 
     @Override
-    public List<XmlAttributeBiConsumer<Language, ?>> getAttributeProcessors() {
+    public List<XmlAttributeProcessor<Language, ?>> getAttributeProcessors() {
         return List.of(
-                new XmlAttributeBiConsumer<>("ID", Language::setLangId, mapToLong),
-                new XmlAttributeBiConsumer<>("Code", Language::setIntLangName, Function.identity()),
-                new XmlAttributeBiConsumer<>("ShortCode", Language::setShortCode, Function.identity()),
-                new XmlAttributeBiConsumer<>("Updated", Language::setUpdated, mapDateTimeToLong)
+                new XmlAttributeProcessor<>("ID", Language::setLangId, mapToLong),
+                new XmlAttributeProcessor<>("Code", Language::setIntLangName, Function.identity()),
+                new XmlAttributeProcessor<>("ShortCode", Language::setShortCode, Function.identity()),
+                new XmlAttributeProcessor<>("Updated", Language::setUpdated, mapDateTimeToLong)
         );
     }
 }

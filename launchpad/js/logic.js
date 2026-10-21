@@ -9,7 +9,7 @@ let indent = "    ";
 /**
  * Everything below should start only when the index page is fully loaded
  */
-window.onload = function () {
+window.onload = async function () {
 
     /**
      * Protocol
@@ -497,35 +497,29 @@ window.onload = function () {
         let targetMenu = $("#" + field);
         let link;
 
-        $.ajax({
-            success: function () {
-                let lang = inputFields.language.value;
-                let header = getRepo() === "freexml/" ? "Open" : "Full";
-                targetMenu.html("");
-                //targetMenu.append('<div class="dropdown-header">' + header + '</div>');
+        let lang = inputFields.language.value;
+        targetMenu.html("");
 
-                if (field === "refDropdownBody") {
-                    refs.forEach((ref) => {
-                        link = protocol + dataDomain + getRepo() + "refs/" + ref;
-                        appendMenuItem(ref);
-                    });
-                    link = "share/SuppliersList.csv"
-                    appendMenuItem("SuppliersList.csv");
-                    link = protocol + dataDomain + getRepo() + lang + "/supplier_mapping.xml";
-                    appendMenuItem("supplier_mapping.xml");
-                } else if (field === "indexDropdownBody") {
-                    indexFiles.forEach((file) => {
-                        link = protocol + dataDomain + getRepo() + lang + "/" + file;
-                        appendMenuItem(file);
-                    });
-                } else if (field === 'documentsBody') {
-                    for (const [key, value] of Object.entries(documentLinks)) {
-                        link = protocol + iceCLog + value;
-                        appendMenuItem(key);
-                    }
-                }
+        if (field === "refDropdownBody") {
+            refs.forEach((ref) => {
+                link = protocol + dataDomain + getRepo() + "refs/" + ref;
+                appendMenuItem(ref);
+            });
+            link = "share/SuppliersList.csv"
+            appendMenuItem("SuppliersList.csv");
+            link = protocol + dataDomain + getRepo() + lang + "/supplier_mapping.xml";
+            appendMenuItem("supplier_mapping.xml");
+        } else if (field === "indexDropdownBody") {
+            indexFiles.forEach((file) => {
+                link = protocol + dataDomain + getRepo() + lang + "/" + file;
+                appendMenuItem(file);
+            });
+        } else if (field === 'documentsBody') {
+            for (const [key, value] of Object.entries(documentLinks)) {
+                link = protocol + iceCLog + value;
+                appendMenuItem(key);
             }
-        });
+        }
 
         /**
          * Shared function within this scope to prevent code duplication,
@@ -946,7 +940,10 @@ window.onload = function () {
                 element.value = tempValue != null ? tempValue : "";
             });
 
-            inputFields.language.value = urlParams.get('lang');
+            const sharedLanguage = urlParams.get('lang');
+            if (sharedLanguage && Array.from(inputFields.language.options).some(option => option.value === sharedLanguage.toUpperCase())) {
+                inputFields.language.value = sharedLanguage.toUpperCase();
+            }
 
             let content = urlParams.get("content");
             if (content !== null) {
@@ -977,22 +974,22 @@ window.onload = function () {
             switch (urlParams.get("radio")) {
                 case "ean":
                     radioButtons.ean.checked = true;
-                    $(".ean").button('toggle');
                     enableInputFields(['ean']);
                     break;
                 case "id":
                     radioButtons.productId.checked = true;
-                    $(".prodId").button('toggle');
                     enableFORequest();
                     enableInputFields(['productId']);
                     break;
                 case "brandMpn":
                 default:
                     radioButtons.mpn.checked = true;
-                    $(".mpn").button('toggle');
                     enableInputFields(['mpn', 'brand']);
                     break;
             }
+            document.querySelectorAll('.radButtons label').forEach(label => {
+                label.classList.toggle('active', label.querySelector('input').checked);
+            });
             if (urlParams.get("output") !== null) {
                 buttons.output.value = urlParams.get("output");
             }
@@ -1021,8 +1018,24 @@ window.onload = function () {
         }
     }
 
-    readParams();
+    const languageStatus = document.getElementById('languageStatus');
+    try {
+        const response = await fetch('/icedata/api/v2/languages');
+        if (!response.ok) throw new Error('Language request failed');
+        const languages = await response.json();
+        if (!Array.isArray(languages) || languages.length === 0) throw new Error('No languages available');
+        const options = languages
+            .sort((a, b) => a.langName.localeCompare(b.langName))
+            .map(language => new Option(language.langName, language.langCode.toUpperCase()));
+        inputFields.language.replaceChildren(...options);
+        if (options.some(option => option.value === 'EN')) inputFields.language.value = 'EN';
+        languageStatus.textContent = '';
+    } catch (error) {
+        languageStatus.textContent = 'Could not load languages. English is available; reload to retry.';
+    }
+    inputFields.language.disabled = false;
     enableInputFields(['mpn', 'brand']);
+    readParams();
 }
 
 class StringBuilder {

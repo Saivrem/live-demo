@@ -1,34 +1,102 @@
-name: Java CI with Gradle
+name: Java and Docker CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-env:
-  WORKING_DIR: './icedata-v2/'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Keep this name aligned with the required status check in the main ruleset.
+    name: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: icedata-v2
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v6
         with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
 
-      - name: Run chmod to make gradlew executable
-        working-directory: ${{ env.WORKING_DIR }}
-        run: chmod +x ./gradlew
+      - name: Set up Gradle and validate wrapper
+        uses: gradle/actions/setup-gradle@v6
 
-      - name: Build with Gradle
-        working-directory: ${{ env.WORKING_DIR }}
-        run: ./gradlew clean test
+      - name: Test and build application
+        run: bash ./gradlew --no-daemon test jacocoTestReport bootJar
+
+      - name: Save test and coverage reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: java-test-reports
+          path: |
+            icedata-v2/build/reports/tests/test/
+            icedata-v2/build/reports/jacoco/test/
+            icedata-v2/build/test-results/test/
+          retention-days: 14
+          if-no-files-found: warn
+
+  docker:
+    name: Docker stack and fail2ban
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Validate scripts and prepare disposable configuration
+        run: |
+          for script in assemble.sh env_setup.sh docker/mysql/10-flyway.sh; do
+            bash -n "$script"
+          done
+          sh -n fail2ban/entrypoint.sh
+          bash env_setup.sh
+          docker compose config --quiet
+          mkdir -p ci-logs
+
+      - name: Build Java image
+        run: docker build -f DockerfileJava -t codex-live-demo-java-check . 2>&1 | tee ci-logs/java-build.log
+
+      - name: Build Apache image
+        run: docker build -f DockerfileWeb -t codex-live-demo-apache-check . 2>&1 | tee ci-logs/apache-build.log
+
+      - name: Build fail2ban image and validate filters
+        run: docker build -t codex-live-demo-fail2ban-check fail2ban 2>&1 | tee ci-logs/fail2ban-build.log
+
+      - name: Test fresh database and Compose stack
+        run: python3 scripts/test-stack.py 2>&1 | tee ci-logs/stack-test.log
+
+      - name: Test HTTP bans and unbans
+        run: python3 scripts/test-security.py 2>&1 | tee ci-logs/security-test.log
+
+      - name: Save Docker build and smoke test logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: docker-test-logs
+          path: ci-logs/
+          retention-days: 14
+          if-no-files-found: warn

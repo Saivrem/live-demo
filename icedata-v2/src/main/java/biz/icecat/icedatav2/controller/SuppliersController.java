@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SuppliersController {
 
-    private final static HttpHeaders responseHeaders;
+    private static final HttpHeaders responseHeaders;
 
     static {
         responseHeaders = new HttpHeaders();
@@ -26,15 +26,14 @@ public class SuppliersController {
     private final SuppliersService suppliersService;
 
     @GetMapping
-    public ResponseEntity<?> getAllSuppliers() {
+    public ResponseEntity<List<ApiSupplier>> getAllSuppliers() {
         List<ApiSupplier> supplierEntities = suppliersService.findAll();
 
         return ResponseEntity.ok().headers(responseHeaders).body(supplierEntities);
     }
 
-    // TODO Add authorization
     @PostMapping
-    public ResponseEntity<?> createSupplier(@RequestBody ApiSupplier apiSupplier) {
+    public ResponseEntity<ApiSupplier> createSupplier(@RequestBody ApiSupplier apiSupplier) {
         log.info("Received {}", apiSupplier);
         ApiSupplier created = suppliersService.createSupplier(apiSupplier);
         if (created != null) {

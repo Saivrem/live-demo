@@ -6,9 +6,9 @@ import java.util.function.Function;
 
 @UtilityClass
 public class FieldUtils {
-    private final static String TRUE = "1";
+    private static final String TRUE = "1";
 
-    public static Function<String, Long> mapToLong = (string) -> {
+    public static final Function<String, Long> mapToLong = string -> {
         try {
             return Long.parseLong(string);
         } catch (NumberFormatException e) {
@@ -16,7 +16,7 @@ public class FieldUtils {
         }
     };
 
-    public static Function<String, Integer> mapToInt = (string) -> {
+    public static final Function<String, Integer> mapToInt = string -> {
         try {
             return Integer.parseInt(string);
         } catch (NumberFormatException e) {
@@ -24,9 +24,9 @@ public class FieldUtils {
         }
     };
 
-    public static Function<String, Boolean> mapToBool = TRUE::equals;
+    public static final Function<String, Boolean> mapToBool = TRUE::equals;
 
-    public static Function<String, Integer> mapToIntOrZero = mapToInt.andThen(num -> num != null ? num : 0);
+    public static final Function<String, Integer> mapToIntOrZero = mapToInt.andThen(num -> num != null ? num : 0);
 
-    public static Function<String, Long> mapDateTimeToLong = DateUtils::parseToLong;
+    public static final Function<String, Long> mapDateTimeToLong = DateUtils::parseToLong;
 }

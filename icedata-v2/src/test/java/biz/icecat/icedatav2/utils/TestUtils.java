@@ -80,7 +80,7 @@ public class TestUtils {
     }
 
     public static URI buildUri(String url, List<UrlParam> params) {
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url);
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
         if (params != null) {
             params.forEach(param -> uriComponentsBuilder.queryParam(param.param(), param.value()));
         }

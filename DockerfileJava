@@ -1,5 +1,18 @@
-FROM openjdk:17
-ARG JAR_FILE=icedata-v2/build/libs/icedata-v2-0.1.0-SNAPSHOT.jar
-COPY ${JAR_FILE} /opt/be.jar
-RUN chmod 770 /opt/be.jar
-ENTRYPOINT ["java","-jar","/opt/be.jar"]
+FROM amazoncorretto:17 AS build
+RUN yum install -y findutils && yum clean all
+WORKDIR /build
+COPY icedata-v2/gradlew icedata-v2/settings.gradle icedata-v2/build.gradle icedata-v2/version.gradle icedata-v2/version.properties ./
+COPY icedata-v2/gradle/ gradle/
+COPY icedata-v2/src/ src/
+RUN chmod +x gradlew && ./gradlew --no-daemon bootJar
+RUN cp build/libs/icedata-v2-*.jar /build/app.jar
+
+FROM build AS test
+ENTRYPOINT ["./gradlew", "--no-daemon"]
+CMD ["test", "jacocoTestReport"]
+
+FROM amazoncorretto:17
+RUN curl --version
+WORKDIR /opt/app
+COPY --from=build /build/app.jar /opt/app/app.jar
+ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]

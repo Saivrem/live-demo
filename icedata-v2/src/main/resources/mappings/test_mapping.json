@@ -1,0 +1,25 @@
+{
+  "mappings": {
+    "key_1": [
+      {
+        "mapping": "value",
+        "enabled": true
+      },
+      {
+        "mapping": "value2",
+        "enabled": false
+      }
+    ],
+    "key_2": [
+      {
+        "mapping": "value",
+        "enabled": false
+      },
+      {
+        "mapping": "value",
+        "enabled": true
+      }
+    ]
+  },
+  "version": "1"
+}

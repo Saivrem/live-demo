@@ -2,15 +2,13 @@ package biz.icecat.icedatav2.it;
 
 import biz.icecat.icedatav2.IcedataV2Application;
 import biz.icecat.icedatav2.configuration.properties.ApplicationProperties;
-import biz.icecat.icedatav2.utils.containers.mysql.MySqlContainer;
 import biz.icecat.icedatav2.utils.models.TestOptions;
 import biz.icecat.icedatav2.utils.models.UrlParam;
-import org.junit.ClassRule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -19,43 +17,75 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.testcontainers.containers.Network;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MySQLContainer;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static biz.icecat.icedatav2.utils.TestConstants.URL_PATTERN;
 import static biz.icecat.icedatav2.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@ActiveProfiles("it")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(BaseIT.BaseTestConfiguration.class)
 @ContextConfiguration(classes = {IcedataV2Application.class}, loader = SpringBootContextLoader.class)
 public class BaseIT {
 
-    private static final Class<?> TEST_CLASS = BaseIT.class;
-
     public static final TestRestTemplate restTemplate = new TestRestTemplate();
+    private static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
+            .withDatabaseName("icedata_test")
+            .withUsername("icedata_test")
+            .withPassword("test_password");
+    private static final Path UPLOADS;
 
-    @ClassRule
-    public static MySqlContainer mySqlContainer = MySqlContainer.create(TEST_CLASS);
+    static {
+        MYSQL.start();
+        try {
+            UPLOADS = Files.createTempDirectory("icedata-it-uploads-");
+        } catch (IOException exception) {
+            throw new ExceptionInInitializerError(exception);
+        }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try (Stream<Path> paths = Files.walk(UPLOADS)) {
+                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                    Files.deleteIfExists(path);
+                }
+            } catch (IOException ignored) {
+                // Isolated temporary test files; never touch application uploadsService.
+            }
+        }));
+    }
 
-    @ClassRule
-    public static Network network = Network.newNetwork();
+    @DynamicPropertySource
+    static void databaseProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
+        registry.add("spring.datasource.username", MYSQL::getUsername);
+        registry.add("spring.datasource.password", MYSQL::getPassword);
+        registry.add("spring.flyway.url", MYSQL::getJdbcUrl);
+        registry.add("spring.flyway.user", MYSQL::getUsername);
+        registry.add("spring.flyway.password", MYSQL::getPassword);
+        registry.add("uploads.directory", () -> UPLOADS.toString());
+        registry.add("uploads.cleanup-cron", () -> "-");
+    }
 
     @Autowired
     private ApplicationProperties properties;
 
     @LocalServerPort
     private int serverPort;
-
-    static {
-        mySqlContainer.withNetwork(network).start();
-    }
 
     protected void verifyGetFlow(TestOptions options) {
         ResponseEntity<String> response = queryEndpointGet(
@@ -96,7 +126,11 @@ public class BaseIT {
         return restTemplate.exchange(request, String.class);
     }
 
-    private String buildRequestUrl(String endpoint) {
+    protected String serverUrl() {
+        return properties.getIcedataBaseUrl() + ":" + serverPort;
+    }
+
+    protected String buildRequestUrl(String endpoint) {
         return URL_PATTERN.formatted(properties.getIcedataBaseUrl(),
                 serverPort,
                 properties.getApiPath(),

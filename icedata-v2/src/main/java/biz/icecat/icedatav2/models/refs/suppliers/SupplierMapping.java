@@ -1,6 +1,6 @@
 package biz.icecat.icedatav2.models.refs.suppliers;
 
-import biz.icecat.icedatav2.mapping.extractors.XmlAttributeBiConsumer;
+import biz.icecat.icedatav2.mapping.extractors.XmlAttributeProcessor;
 import biz.icecat.icedatav2.models.refs.XmlElement;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -16,7 +16,7 @@ public class SupplierMapping implements XmlElement<SupplierMapping> {
     private String mappedSupplierName;
 
     @Override
-    public List<XmlAttributeBiConsumer<SupplierMapping, ?>> getAttributeProcessors() {
+    public List<XmlAttributeProcessor<SupplierMapping, ?>> getAttributeProcessors() {
         return List.of();
     }
 }
