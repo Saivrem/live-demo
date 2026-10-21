@@ -16,7 +16,8 @@ concurrency:
 
 jobs:
   test:
-    name: Java tests and build
+    # Keep this name aligned with the required status check in the main ruleset.
+    name: test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
