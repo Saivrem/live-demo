@@ -7,36 +7,36 @@ example_file="$project_directory/.env.example"
 
 usage() {
     cat <<'USAGE'
-Использование: bash env_setup.sh
+Usage: bash env_setup.sh
 
-Создаёт .env рядом со скриптом на основе .env.example.
-Пароли MySQL и Flyway генерируются автоматически.
-После создания заполни ICECAT_USER и ICECAT_PASS в .env.
-Существующий .env никогда не перезаписывается.
+Creates .env next to this script using .env.example.
+MySQL and Flyway passwords are generated automatically.
+After creation, fill in ICECAT_USER and ICECAT_PASS in .env.
+An existing .env is never overwritten.
 
-  -h, --help  Показать эту справку.
+  -h, --help  Show this help.
 USAGE
 }
 
 if [[ $# -gt 0 ]]; then
     case "$1" in
         -h|--help) usage; exit 0 ;;
-        *) echo "Неизвестный аргумент: $1. Перезапись .env через --force отключена." >&2; usage >&2; exit 2 ;;
+        *) echo "Unknown argument: $1. Overwriting .env with --force is disabled." >&2; usage >&2; exit 2 ;;
     esac
 fi
 
 if [[ -e "$environment_file" || -L "$environment_file" ]]; then
-    echo "Файл $environment_file уже существует. Он оставлен без изменений."
-    echo "Открой его в редакторе и проверь ICECAT_USER и ICECAT_PASS."
-    echo "Не генерируй новые пароли для уже созданной базы данных."
+    echo "File $environment_file already exists and has been left unchanged."
+    echo "Open it in an editor and check ICECAT_USER and ICECAT_PASS."
+    echo "Do not regenerate passwords for an existing database."
     exit 0
 fi
 
 if [[ ! -f "$example_file" ]]; then
-    echo "Не найден $example_file. Скопируй проект целиком, включая скрытые файлы." >&2
+    echo "File $example_file not found. Copy the complete project, including hidden files." >&2
     exit 1
 fi
-command -v openssl >/dev/null || { echo "Нужен openssl. На Ubuntu: sudo apt install openssl" >&2; exit 1; }
+command -v openssl >/dev/null || { echo "openssl is required. On Ubuntu: sudo apt install openssl" >&2; exit 1; }
 
 generated_db_password=$(openssl rand -hex 24)
 generated_flyway_password=$(openssl rand -hex 24)
@@ -53,9 +53,9 @@ sed \
 
 # Publish the complete file without overwriting a concurrently created .env.
 ln -- "$temporary_file" "$environment_file"
-echo "Создан $environment_file (доступ только владельцу: 600)."
-echo "Дальше:"
-printf '  1. Открой файл: nano "%s"\n' "$environment_file"
-echo "  2. Замени YOUR_ICECAT_LOGIN и YOUR_ICECAT_PASSWORD своими данными."
-echo "  3. Сохрани: Ctrl+O, Enter. Выйди: Ctrl+X."
-printf '  4. Запусти: bash "%s/assemble.sh"\n' "$project_directory"
+echo "Created $environment_file (owner-only permissions: 600)."
+echo "Next steps:"
+printf '  1. Open the file: nano "%s"\n' "$environment_file"
+echo "  2. Replace YOUR_ICECAT_LOGIN and YOUR_ICECAT_PASSWORD with your credentials."
+echo "  3. Save: Ctrl+O, Enter. Exit: Ctrl+X."
+printf '  4. Run: bash "%s/assemble.sh"\n' "$project_directory"
