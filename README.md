@@ -1,102 +1,257 @@
-# Live Demo
+# Live Demo / Icedata V2
 
-## Icedata V2
+Веб-интерфейс для работы с Icecat. Apache отдаёт страницы, Java/Spring обрабатывает API и загрузку файлов, MySQL хранит справочники. Fail2ban блокирует типовые сканеры по журналу Apache. PHP в проекте больше нет.
 
-### Introduction
-This project if a full representation of live-demo project. Codebase is split between several modules, including launchpad for web, icedata-v2 for java application. All projects could be assembled and run with docker compose file provided.
+## Быстрый запуск на виртуалке
 
-### Prerequisites
+Ниже — инструкция для Linux-сервера. Все команды выполняются **на сервере**, в терминале. Нужны Docker Engine с Compose v2, доступ к интернету и учётные данные Icecat.
 
-#### Common Setup:
-- All components of this project share the same `.env` file, which is **not included** for security reasons. The project expects specific environment variables to be set. 
-  - see `env_setup.sh` for reference, it should be also used to set up variables in local env, however, I'd suggest to stick with `.env` file and compose 
+### 1. Подготовить сервер
 
-#### Database Requirements:
-- Compose starts MySQL and initializes an empty database volume, including the Flyway user. No host MySQL installation is needed. Existing database volumes keep their users and passwords.
+Установи Docker Engine и Compose plugin по [официальной инструкции для Ubuntu](https://docs.docker.com/engine/install/ubuntu/). Для другого Linux выбери свой дистрибутив в документации Docker. Java, Gradle, MySQL и Apache отдельно устанавливать не нужно: они собираются или запускаются в контейнерах.
 
-#### Web Server Requirements:
-- Launchpad is static HTML/CSS/JavaScript served by Apache HTTP Server (`httpd:2.4-alpine`) without PHP.
-- `DockerfileWeb` packages `launchpad/` and `apache.conf`. Static files are packaged into the image; rebuild the web image after edits.
-- Apache proxies `/icedata/api/v2/` to the Java service. The browser loads languages from `/icedata/api/v2/languages` before restoring shared-link parameters.
-- `/index.php` redirects to `/` while preserving query parameters for old shared links. The obsolete statistics page and Status button have been removed.
+Для команд ниже также нужны `bash`, `openssl`, `curl` и редактор `nano`. На Ubuntu их можно установить командой `sudo apt install bash openssl curl nano`.
 
-#### Shared Uploads:
-- `POST /icedata/api/v2/uploads` accepts multipart `files[]`; `GET` on the same endpoint lists uploads. Each entry contains `name`, `url`, and `size`; its URL downloads the file as an attachment.
-- Allowed extensions: `csv`, `xls`, `xlsx`, `docx`, `doc`. Files must be nonempty and at most 20 MiB each; the complete multipart request is limited to 100 MiB.
-- Spring stores uploads with generated unique names in the `icedata-v2-uploads-volume` Docker volume, outside the static web directory. `/uploads/` is the file-list page.
-- Files remain publicly shared, as before. Spring deletes them daily at 00:00 UTC, including files uploaded shortly before midnight.
-- Configure `UPLOADS_DIRECTORY` to change the storage directory (`uploads` relative to the backend working directory outside Docker). `uploads.cleanup-cron` and `uploads.cleanup-zone` control cleanup.
-- Existing files in `launchpad/uploads/` are not migrated into the new storage. Move any files that must be preserved out of that old directory before deploying, then upload them through the new form.
+Проверь установку:
 
-#### Backend Setup:
-- The backend is located in the `icedata-v2` package and relies on the environment variables specified in the common setup section above.
-- App configuration is split in several parts in `application.yml`: 
-  - general spring and other dependencies configs like `spring`, `management`, `server`
-  - app-specific config in same file `icedata-v2` part
-  - files to work with in `files` segment
+```bash
+docker info
+docker compose version
+```
 
-### Deployment on a Linux VM
+Обе команды должны завершиться без ошибки. Если получаешь `permission denied`, настрой доступ пользователя по [инструкции Docker](https://docs.docker.com/engine/install/linux-postinstall/) и заново войди по SSH. Доступ к Docker даёт административные права на сервере.
 
-Install Docker Engine with Compose and nftables kernel support. The fail2ban service uses the Linux host network namespace and `NET_ADMIN` to manage its own firewall tables. It needs neither privileged mode nor the Docker socket. Docker Desktop is not a substitute for validating protection on the target VM.
+Для полного стека нужен обычный Docker Engine с правами root и поддержкой nftables в ядре Linux: fail2ban использует сеть хоста и `NET_ADMIN`. Rootless Docker для этой конфигурации не подходит. На macOS/Windows можно разрабатывать и запускать тесты, но защиту внешнего сервера нужно проверять на целевой Linux-виртуалке.
+
+В настройках сети у хостинг-провайдера разреши входящий **TCP 80** для сайта. Сохрани доступ по SSH. Порты **3306 и 8086 открывать наружу не нужно**.
+
+### 2. Скопировать проект
+
+Склонируй репозиторий или скопируй его целиком на сервер. Например, если папка проекта называется `live-demo`:
+
+```bash
+cd live-demo
+ls assemble.sh docker-compose.yml env_setup.sh
+```
+
+Все три файла должны существовать. Далее команды выполняются из этой папки, рядом с `docker-compose.yml`.
+
+### 3. Создать и заполнить настройки
 
 ```bash
 bash env_setup.sh
-# Edit .env: set ICECAT_USER and ICECAT_PASS; check the other settings.
-docker compose up -d --build
+nano .env
 ```
 
-`env_setup.sh` generates independent random database passwords and leaves an existing `.env` untouched. Java builds inside Docker; a local JDK or prebuilt JAR is not required. Only Apache port 80 is public. MySQL (`127.0.0.1:3306`) and Java (`127.0.0.1:8086`) are available on the VM loopback interface. Containers connect through the Compose network using `database:3306` and `java:8086`; localhost is only used for host access and each service's own healthcheck.
+Наглядный шаблон: [`.env.example`](.env.example). В нём настройки разделены на четыре группы: твои данные Icecat, пути выгрузок, пароли базы и внутренняя сеть.
 
-`/icedata/api/v2/admin` and its subpaths return 404 for every method, including direct requests to Spring. Database updates run only on the scheduler, daily at 10:00 UTC. An empty database will remain empty until the first scheduled update; no HTTP initialization route exists.
+Скрипт создаст `.env` рядом с собой на основе этого шаблона, со случайными паролями базы данных и правами `600`. Он работает из любого каталога. Не копируй пример в `.env` вручную: маркеры `__GENERATE_*__` должен заменить скрипт. Справка: `bash env_setup.sh --help`. В редакторе замени два значения:
 
-For local frontend edits, rebuild `launchpad` with `docker compose up -d --build launchpad`. To start only the database and backend, use `docker compose up -d --build database java`.
+| Переменная | Что поставить |
+| --- | --- |
+| `ICECAT_USER` | Логин твоей учётной записи Icecat вместо `YOUR_ICECAT_LOGIN` |
+| `ICECAT_PASS` | Пароль Icecat вместо `YOUR_ICECAT_PASSWORD` |
 
-### Fail2ban
+Остальные значения для стандартного запуска можно оставить. Если у аккаунта другой каталог выгрузки, поправь `ICECAT_BASE` и `ICECAT_REPO`. Пароль со знаком `$` заключай в одинарные кавычки, чтобы Compose не воспринял его часть как переменную.
 
-The custom image in `fail2ban/` runs two jails over Apache's shared access log:
+В `nano`: **Ctrl+O**, **Enter** — сохранить; **Ctrl+X** — выйти.
 
-- `launchpad-scanners`: phpMyAdmin, Adminer, WordPress, PHPUnit/CGI probes, exposed repository/environment files, common database backups and sensitive Actuator endpoints. Five matching failures within 60 seconds trigger a one-hour ban.
-- `launchpad-exploits`: literal/encoded directory traversal and probes for OS credential/environment files. Two matching failures within 60 seconds trigger a one-day ban.
+Если `.env` уже существует, `env_setup.sh` сообщит об этом и оставит его без изменений — это нормально. Просто открой существующий файл. **Не генерируй пароли заново для уже работающей базы:** изменение `.env` не меняет пользователей и пароли внутри сохранённого MySQL.
 
-Repeated bans increase up to seven days; state survives container recreation in `fail2ban-state`. Ordinary 404s, the legitimate `/index.php` redirect, uploads and healthchecks do not trigger bans. Filters inspect the request target, not attacker-controlled referer/user-agent strings. Tests for attack cases, IPv6, and benign traffic run during the image build. These are targeted scanner filters, not a general SQL injection/XSS detector or a DDoS mitigation service.
+`.env` содержит секреты: не коммить его и не публикуй содержимое в логах или сообщениях.
 
-Fail2ban creates separate `inet` nftables tables (`icedata_f2b_forward`, `icedata_f2b_input`) with early forward/input hooks, covering Docker forwarding and host input for TCP ports 80/443 and both IP families. It does not edit Docker's own chains. Apache access logs rotate in eight files of approximately 10 MiB; `access.log` follows the current file. Docker stdout logs are bounded too.
+### 4. Запустить
 
-This default deployment assumes clients connect directly to Apache. Do not put a CDN/load balancer in front without configuring trusted client-IP handling and adapting the ban action to that topology. Fail2ban deliberately does not trust incoming `X-Forwarded-For` headers. HTTPS certificates/TLS termination must be configured for the VM's actual domain; port 443 is covered by the ban action but is not currently published.
+```bash
+bash assemble.sh
+```
+
+Первый запуск скачивает образы и зависимости, собирает Java, создаёт базу и применяет миграции. Это может занять несколько минут. Скрипт завершится успешно, когда сервисы будут готовы; после запуска контейнеров он ждёт их готовности до 180 секунд.
+
+Варианты запуска:
+
+| Команда | Что делает |
+| --- | --- |
+| `bash assemble.sh` | Собирает образы и запускает стек |
+| `bash assemble.sh -t` | Сначала запускает Java-тесты в Docker, затем собирает и запускает стек |
+| `bash assemble.sh -c` | Собирает образы, останавливает старые контейнеры и создаёт их заново; данные сохраняет |
+| `bash assemble.sh -t -c` | Тесты, сборка, затем пересоздание контейнеров |
+| `bash assemble.sh --help` | Показывает справку |
+
+Ошибка тестов или сборки останавливает скрипт до выключения работающих контейнеров. Флаг `-t` **не означает «только тесты»**: после успешных тестов будет запуск сервиса. Отдельный запуск тестов описан ниже.
+
+Если нужен запуск напрямую через Compose:
+
+```bash
+docker compose up -d --build --wait --wait-timeout 180
+```
+
+### 5. Проверить результат
+
+```bash
+docker compose ps
+curl -fsS http://127.0.0.1/icedata/api/v2/actuator/health
+```
+
+В списке должны работать `database`, `java`, `launchpad`, `fail2ban`. У базы, Java и fail2ban должен быть статус `healthy`; у Apache отдельного healthcheck нет. Запрос здоровья должен вернуть JSON со `"status":"UP"`.
+
+Открой в браузере **`http://IP_СЕРВЕРА/`**, заменив `IP_СЕРВЕРА` реальным адресом виртуалки. `localhost` в браузере на твоём компьютере означает твой компьютер, а не сервер.
+
+**На новой базе справочники сначала пустые.** Импорт запускается ежедневно в **10:00 UTC**, а не при старте приложения. Дождись ближайшего запуска и проверь:
+
+```bash
+docker compose logs --tail=200 java
+curl -fsS http://127.0.0.1/icedata/api/v2/languages
+```
+
+Админские HTTP-маршруты закрыты: `/icedata/api/v2/admin` и вложенные пути возвращают `404`. Кнопки принудительного импорта нет.
+
+## Если что-то не поднялось
+
+Сначала посмотри состояние и последние сообщения:
+
+```bash
+docker compose ps -a
+docker compose logs --tail=100 database java launchpad fail2ban
+```
+
+Для наблюдения за логами в реальном времени:
+
+```bash
+docker compose logs -f --tail=100 java
+```
+
+**Ctrl+C** прекращает просмотр логов, сервис продолжает работать.
+
+| Симптом | Что проверить |
+| --- | --- |
+| `Cannot connect to the Docker daemon` | Запущен ли Docker; на Linux с systemd: `sudo systemctl start docker` |
+| `Missing .env` | Выполнен ли шаг 3, лежит ли `.env` рядом с `assemble.sh` |
+| `port is already allocated` / `address already in use` | Не заняты ли 80, 3306 или 8086 другим сервисом; не запущена ли вторая копия проекта |
+| MySQL или Java не стали `healthy` | Логи `database` и `java`; совпадают ли пароли в `.env` с паролями существующей базы |
+| Истёк таймаут ожидания | Контейнеры могут продолжать запускаться. Проверь `ps -a` и логи, затем повтори `bash assemble.sh` после устранения причины |
+| На сервере `curl` работает, а сайт снаружи не открывается | Правильный ли IP, разрешён ли TCP 80 в сети провайдера, используешь ли `http://` |
+| Пустой список языков | Наступило ли 10:00 UTC после первого запуска; верны ли Icecat credentials и каталог выгрузки; что пишет Java при импорте |
+| Fail2ban пишет об ошибке nftables или `Operation not permitted` | Это Linux VM с обычным Docker Engine? Сохранены ли `network_mode: host` и `NET_ADMIN` в Compose? Поддерживает ли ядро nftables? |
+
+Не удаляй том базы для исправления ошибки запуска: в нём находятся данные.
+
+## Обновление и остановка
+
+Перед обновлением сохрани резервную копию базы и `.env`. Если проект получен через Git и локальные изменения сохранены:
+
+```bash
+git pull --ff-only
+bash assemble.sh -t
+```
+
+Сборка пересоздаёт изменившиеся сервисы. Файлы интерфейса упакованы в образ Apache: правки в `launchpad/` появляются на сайте после пересборки. Для обновления только интерфейса:
+
+```bash
+docker compose up -d --build launchpad
+```
+
+Остановить стек, сохранив данные:
+
+```bash
+docker compose down
+```
+
+Снова запустить уже собранные образы:
+
+```bash
+docker compose up -d --wait --wait-timeout 180
+```
+
+**Не добавляй `-v` / `--volumes` к `docker compose down`: это удалит тома с данными.** Не меняй без необходимости имя папки проекта или Compose project name: от них зависит выбор томов, и другой проект может создать новую пустую базу.
+
+## Где хранятся данные и какие порты доступны
+
+| Компонент | Доступ |
+| --- | --- |
+| Apache / сайт | Публичный порт 80 |
+| Spring API | Через Apache; напрямую только на сервере: `127.0.0.1:8086` |
+| MySQL | Только на сервере: `127.0.0.1:3306` |
+| Fail2ban | HTTP-порта нет; управление через `docker compose exec` |
+
+Внутри Compose контейнеры обращаются друг к другу по именам `database:3306` и `java:8086`. Не заменяй эти адреса на `localhost`: внутри контейнера это сам контейнер.
+
+| Том в Compose | Содержимое |
+| --- | --- |
+| `icedata-v2-mysql-volume` | База MySQL |
+| `icedata-v2-uploads-volume` | Загруженные файлы |
+| `apache-logs` | Журналы Apache |
+| `fail2ban-state` | Состояние fail2ban |
+
+Docker добавляет к именам томов префикс проекта. Обычный restart, пересборка и `assemble.sh -c` сохраняют тома. Сохранение тома не заменяет резервную копию.
+
+## Загрузка файлов
+
+Страница загрузок: `/uploads/`. Java принимает непустые `csv`, `xls`, `xlsx`, `docx`, `doc`: до **20 MiB на файл** и **100 MiB на весь multipart-запрос**. Сохранённые файлы получают уникальные имена и скачиваются как вложения.
+
+**Файлы публичные и удаляются ежедневно в 00:00 UTC**, даже если загружены за минуту до этого. Это временный обмен файлами.
+
+API:
+
+- `POST /icedata/api/v2/uploads` — multipart-поле `files[]`.
+- `GET /icedata/api/v2/uploads` — список с полями `name`, `url`, `size`.
+- Адрес из `url` — скачивание файла.
+
+Старые файлы из `launchpad/uploads/` автоматически не переносятся. Перед переходом сохрани нужные файлы отдельно и загрузи через новую форму. Старые ссылки `/index.php?...` перенаправляются на главную с сохранением параметров. Страница статистики и кнопка Status удалены.
+
+## Fail2ban и HTTPS
+
+В составе проекта собирается собственный образ fail2ban. Он читает журнал Apache и включает два фильтра:
+
+| Jail | За что банит | Начальный бан |
+| --- | --- | --- |
+| `launchpad-scanners` | Поиск phpMyAdmin, Adminer, WordPress, PHPUnit/CGI, `.env`, `.git`, резервных копий и служебных endpoints | 5 совпадений за 60 секунд → 1 час |
+| `launchpad-exploits` | Попытки обхода каталогов и чтения системных файлов | 2 совпадения за 60 секунд → 1 сутки |
+
+Повторные баны увеличиваются до 7 суток. Обычная ошибка 404 сама по себе бан не вызывает. Фильтры проверяют адрес запроса и код ответа; это защита от конкретных сканеров, не универсальная защита от DDoS, SQL injection или XSS.
+
+Проверить работу:
 
 ```bash
 docker compose exec fail2ban fail2ban-client status
 docker compose exec fail2ban fail2ban-client status launchpad-scanners
-docker compose exec fail2ban fail2ban-client set launchpad-scanners unbanip 198.51.100.23
-docker compose logs --tail=100 fail2ban
+docker compose exec fail2ban fail2ban-client status launchpad-exploits
 ```
 
-The last unban command is an example; substitute the actual address. Custom jail overrides can be mounted as `/etc/fail2ban/jail.d/99-local.local`. Do not run a second fail2ban instance that manages the same nftables tables.
-
-To rerun the isolated firewall smoke test (Docker Engine required):
+Разбанить адрес (замени пример реальным IP; укажи jail, в котором он заблокирован):
 
 ```bash
-docker build -f DockerfileWeb -t codex-live-demo-apache-check .
-docker build -t codex-live-demo-fail2ban-check fail2ban
-python3 scripts/test-security.py
+docker compose exec fail2ban fail2ban-client set launchpad-scanners unbanip 198.51.100.23
 ```
 
-It checks real Apache logs, HTTP blocking/unblocking and IPv6 rule creation in a private container network namespace. It never uses host networking or changes the host firewall, and removes its test containers/volume afterwards. Validate the actual public path on the target VM after deployment as well.
+Fail2ban управляет отдельными nftables-таблицами `icedata_f2b_input` и `icedata_f2b_forward` для TCP 80/443, IPv4 и IPv6. Docker socket ему не нужен. Журналы Apache и контейнеров ограничены по размеру. Не запускай второй fail2ban, управляющий теми же таблицами.
 
-### Java tests and coverage
+Текущая схема предполагает **прямое подключение к Apache**. Если впереди стоит CDN или другой proxy, сначала настрой доверенные адреса proxy, определение IP клиента и соответствующий способ бана. Входящему `X-Forwarded-For` конфигурация не доверяет.
 
-With JDK 17 and Docker Engine running:
+**HTTPS пока не настроен.** Сайт работает по HTTP на порту 80. Для своего домена нужно отдельно настроить сертификат и TLS в Apache, публикацию порта 443 и доступ к нему у провайдера. Наличие 443 в правилах fail2ban само по себе HTTPS не включает.
+
+## Тесты для разработки
+
+### Java без запуска рабочего стека
+
+Нужны локальный JDK 17 и работающий Docker:
 
 ```bash
 cd icedata-v2
 ./gradlew test jacocoTestReport
+cd ..
 ```
 
-The full suite uses a disposable MySQL 8.4 Testcontainer with dynamic ports, real Flyway migrations and isolated upload/download directories. Integration tests use local HTTP gzip/XML fixtures, so they need no Icecat credentials or external Icecat requests. The suite covers HTTP APIs, Tomcat multipart limits, atomic upload rollback, Unicode filenames, repeated imports, batching, timestamp offsets, external XML entities and failure isolation between scheduled sources. No production containers or data are reused.
+Тесты создают временный MySQL-контейнер, используют локальные XML/gzip-фикстуры и отдельные каталоги. Рабочая база и учётные данные Icecat им не нужны.
 
-Reports: `icedata-v2/build/reports/tests/test/index.html` and `icedata-v2/build/reports/jacoco/test/html/index.html`.
+Отчёты локального запуска:
 
-The Dockerfile also has a `test` target for running the JVM itself inside Docker:
+- `icedata-v2/build/reports/tests/test/index.html` — результаты тестов.
+- `icedata-v2/build/reports/jacoco/test/html/index.html` — покрытие кода.
+
+### Java-тесты целиком внутри Docker
+
+Локальный JDK не нужен. Выполняй из корня проекта:
 
 ```bash
 docker build --target test -f DockerfileJava -t codex-live-demo-java-tests .
@@ -109,15 +264,18 @@ docker run --rm \
   codex-live-demo-java-tests
 ```
 
-The socket mount is needed only by this trusted test runner to create disposable MySQL/Ryuk containers; it is not part of the deployed application or fail2ban service.
+Docker socket используется только тестовым контейнером для создания временной БД. Результат виден в терминале; HTML-отчёты этого запуска удалятся вместе с контейнером. Для отчётов на диске используй локальный запуск выше.
 
-For a full stack smoke test after building the three `codex-live-demo-*-check` images:
+### Проверка всего стека и реальных банов
+
+Нужны Docker и Python 3. Выполняй из корня проекта с подготовленным `.env`:
 
 ```bash
 docker build -f DockerfileJava -t codex-live-demo-java-check .
 docker build -f DockerfileWeb -t codex-live-demo-apache-check .
 docker build -t codex-live-demo-fail2ban-check fail2ban
 python3 scripts/test-stack.py
+python3 scripts/test-security.py
 ```
 
-This creates a separate Compose project, fresh database/log/upload volumes and random loopback ports using only test credentials, checks readiness and upload/list/download through Apache, and deletes its own containers and volumes afterwards. Fail2ban runs in a private namespace during this smoke test; `scripts/test-security.py` tests actual HTTP blocking separately.
+Первый скрипт создаёт отдельный Compose-проект с новой БД и случайными локальными портами, проверяет готовность и загрузку/скачивание через Apache. Второй проверяет баны по реальным HTTP-запросам, разблокировку и IPv6-правила. Оба используют отдельные тестовые ресурсы и удаляют их после завершения. Проверка firewall идёт в отдельном сетевом пространстве, без изменения firewall хоста. Внешний доступ и баны на целевой VM проверяй отдельно после развёртывания.

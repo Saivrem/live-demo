@@ -1,5 +1,6 @@
 ### project ###
 .env
+.env.tmp.*
 init_db.sql
 application-local.yml
 tmp

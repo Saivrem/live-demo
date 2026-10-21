@@ -1,5 +1,6 @@
 .git
 .env
+.env.tmp.*
 .idea
 **/.DS_Store
 **/.gradle
