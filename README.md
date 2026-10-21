@@ -106,7 +106,7 @@ docker compose logs --tail=200 java
 curl -fsS http://127.0.0.1/icedata/api/v2/languages
 ```
 
-Admin HTTP routes are closed: `/icedata/api/v2/admin` and its subpaths return `404`. There is no manual import button.
+Administrative API access requires the `ICEDATA_ADMIN` authority: this covers `/icedata/api/v2/admin` (including subpaths) and `POST /icedata/api/v2/suppliers`. Spring Security returns `403` without that authority. No users or login flow are configured, and no default user is generated. Administrative writes also require a valid CSRF token. Apache continues to return `404` for admin routes; the retired admin controller remains a `404` stub even after authorization. There is no manual import button. Public read endpoints and uploads remain available without authentication.
 
 ## Troubleshooting
 

@@ -32,7 +32,6 @@ public class SuppliersController {
         return ResponseEntity.ok().headers(responseHeaders).body(supplierEntities);
     }
 
-    // TODO Add authorization
     @PostMapping
     public ResponseEntity<ApiSupplier> createSupplier(@RequestBody ApiSupplier apiSupplier) {
         log.info("Received {}", apiSupplier);

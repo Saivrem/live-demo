@@ -16,7 +16,7 @@ public class AdminIT extends BaseIT {
 
     @Test
     void adminIsClosed() {
-        assertEquals(404,
+        assertEquals(403,
                 queryEndpointGet("admin", List.of(), new HttpHeaders())
                         .getStatusCode().value());
     }

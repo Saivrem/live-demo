@@ -37,11 +37,11 @@ public class SuppliersIT extends BaseIT {
     }
 
     @Test
-    void shouldCreateSupplier_onValidInput() {
+    void shouldRejectSupplierCreation_onPost() {
         verifyPostFlow(TestOptions.of(
                 SUPPLIERS_ENDPOINT,
-                200,
-                "data/it/supplier/create/expected.json",
+                403,
+                null,
                 null,
                 "data/it/supplier/create/requestBody.json"
         ));

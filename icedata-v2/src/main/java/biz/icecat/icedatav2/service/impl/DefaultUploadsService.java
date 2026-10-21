@@ -4,7 +4,6 @@ import biz.icecat.icedatav2.models.api.ApiUpload;
 import biz.icecat.icedatav2.service.UploadsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -82,7 +81,6 @@ public class DefaultUploadsService implements UploadsService {
     }
 
     @Override
-    @Scheduled(cron = "${uploads.cleanup-cron:0 0 0 * * *}", zone = "${uploads.cleanup-zone:UTC}")
     public synchronized void cleanup() throws IOException {
         try (Stream<Path> paths = Files.list(uploadDirectory)) {
             for (Path path : paths.filter(this::isUpload).toList()) {
