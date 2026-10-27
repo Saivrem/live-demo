@@ -21,7 +21,7 @@ import java.util.List;
 public class LanguagesController {
 
     // TODO extract somewhere
-    private final static HttpHeaders headers;
+    private static final HttpHeaders headers;
     private final LanguagesService languagesService;
 
     static {

@@ -1,6 +1,10 @@
 spring:
     main:
         banner-mode: 'off'
+    servlet:
+        multipart:
+            max-file-size: 20MB
+            max-request-size: 100MB
     application:
         name: "icedata-v2"
     jpa:
@@ -40,7 +44,8 @@ logging:
         root: info
 
 icedata-v2:
-    cron:  "0 0 10 * * ?"
+    cron: "0 0 10 * * ?"
+    update-zone: UTC
     batch-size: 1000 # how many entries should be saved into DB on update
     icecat-base-url: ${ICECAT_BASE}
     icecat-repo: ${ICECAT_REPO}
@@ -53,3 +58,8 @@ files: # TODO think on proper URLs storing and configuration
     language-list-file: ${LANG_LIST:refs/LanguageList.xml.gz}
     suppliers-list: ${SUPPLIERS_LIST:refs/SuppliersList.xml.gz}
     supplier-mapping: ${SUPPLIER_MAPPING:EN/supplier_mapping.xml}
+
+uploads:
+    directory: ${UPLOADS_DIRECTORY:uploads}
+    cleanup-cron: "0 0 0 * * *"
+    cleanup-zone: UTC

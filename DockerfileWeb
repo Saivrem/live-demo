@@ -1,10 +1,11 @@
-FROM php:7.4-apache
-
-RUN apt update && apt install -y cron
-COPY cleanUploads.sh /usr/local/bin/cleanup.sh
-RUN chmod +x /usr/local/bin/cleanup.sh
-RUN echo "0 0 * * * /usr/local/bin/cleanup.sh > /var/log/cleanup.log 2>&1" >> /etc/cron.d/cleanup-cron
-RUN chmod 0644 /etc/cron.d/cleanup-cron && \
-    crontab /etc/cron.d/cleanup-cron
-
-CMD ["bash", "-c", "cron && apache2-foreground"]
+FROM httpd:2.4-alpine
+RUN sed -i \
+    -e 's/^#LoadModule proxy_module /LoadModule proxy_module /' \
+    -e 's/^#LoadModule proxy_http_module /LoadModule proxy_http_module /' \
+    -e 's/^#LoadModule headers_module /LoadModule headers_module /' \
+    -e 's/^#LoadModule rewrite_module /LoadModule rewrite_module /' \
+    /usr/local/apache2/conf/httpd.conf
+RUN mkdir -p /var/log/apache2
+COPY apache.conf /usr/local/apache2/conf/extra/launchpad.conf
+RUN printf '\nInclude conf/extra/launchpad.conf\n' >> /usr/local/apache2/conf/httpd.conf
+COPY launchpad/ /usr/local/apache2/htdocs/

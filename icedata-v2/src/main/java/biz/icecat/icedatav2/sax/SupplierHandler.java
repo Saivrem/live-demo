@@ -12,60 +12,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
+import static biz.icecat.icedatav2.utils.SaxUtils.processAttributes;
 
 // TODO Very POC implementation, refactor!
 @Slf4j
 @RequiredArgsConstructor
-public class SupplierHandler extends DefaultHandler {
+public class SupplierHandler extends DefaultHandler  implements CountedHandler<Supplier> {
 
     private static final String SUPPLIER = "Supplier";
 
+    @Getter
+    private int processed = 0;
     private final int batchSize;
     private final Consumer<List<Supplier>> consumer;
-    private final List<Supplier> suppliers = new ArrayList<>();
-    @Getter
-    private int processedSuppliersNumber = 0;
-    private Supplier currentSupplier;
+    private final List<Supplier> entities = new ArrayList<>();
+    private Supplier currentEntity;
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equalsIgnoreCase(SUPPLIER)) {
-            currentSupplier = new Supplier();
-            populateFields(currentSupplier, attributes);
+            currentEntity = new Supplier();
+            processAttributes(currentEntity, attributes);
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase("Supplier") && currentSupplier != null) {
-            suppliers.add(currentSupplier);
-            currentSupplier = null;
+        if (qName.equalsIgnoreCase(SUPPLIER) && currentEntity != null) {
+            entities.add(currentEntity);
+            currentEntity = null;
 
-            if (suppliers.size() == batchSize) {
-                flush();
+            if (entities.size() == batchSize) {
+                processed += flush(consumer, entities);
             }
         }
     }
 
     @Override
     public void endDocument() throws SAXException {
-        if (!suppliers.isEmpty()) {
-            flush();
+        if (!entities.isEmpty()) {
+           processed += flush(consumer, entities);
         }
-    }
-
-    /**
-     * Passing current suppliers batch to consumer
-     */
-    private void flush() {
-        try {
-            consumer.accept(suppliers);
-        } catch (Exception e) {
-            log.error("{}", e.getMessage());
-        }
-        processedSuppliersNumber += suppliers.size();
-        log.debug("{}: processed {} entries", getClass().getSimpleName(), suppliers.size());
-        suppliers.clear();
     }
 }

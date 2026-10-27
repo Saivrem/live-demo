@@ -5,11 +5,13 @@ import biz.icecat.icedatav2.service.impl.DefaultLanguagesService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
+import biz.icecat.icedatav2.configuration.SecurityConfiguration;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -25,12 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(value = LanguagesController.class)
 @ExtendWith(MockitoExtension.class)
+@Import(SecurityConfiguration.class)
 class LanguagesControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private DefaultLanguagesService languagesService;
 
     private final static List<ApiLanguage> allLanguages = new ArrayList<>();

@@ -1,0 +1,28 @@
+[DEFAULT]
+backend = polling
+usedns = no
+ignoreip = 127.0.0.1/8 ::1
+logpath = /var/log/apache2/access.log
+findtime = 60
+maxretry = 5
+bantime = 3600
+bantime.increment = true
+bantime.factor = 2
+bantime.maxtime = 604800
+# Independent inet tables cover IPv4 and IPv6, including Docker forwarding.
+# Drop before Docker's filter chains, without editing any Docker-owned table.
+action = nftables[actname=forward, name=%(__name__)s, table=icedata_f2b_forward, chain=web, chain_hook=forward, chain_priority=-10, port="80,443", blocktype=drop]
+         nftables[actname=input, name=%(__name__)s, table=icedata_f2b_input, chain=web, chain_hook=input, chain_priority=-10, port="80,443", blocktype=drop]
+
+[sshd]
+enabled = false
+
+[launchpad-scanners]
+enabled = true
+filter = launchpad-scanners
+
+[launchpad-exploits]
+enabled = true
+filter = launchpad-exploits
+maxretry = 2
+bantime = 86400

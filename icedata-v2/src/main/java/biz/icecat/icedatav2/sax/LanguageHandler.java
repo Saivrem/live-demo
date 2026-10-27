@@ -12,11 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static biz.icecat.icedatav2.utils.SaxUtils.populateFields;
+import static biz.icecat.icedatav2.utils.SaxUtils.processAttributes;
 
 @Slf4j
 @RequiredArgsConstructor
-public class LanguageHandler extends DefaultHandler {
+public class LanguageHandler extends DefaultHandler implements CountedHandler<Language> {
 
     private static final String LANGUAGE = "Language";
 
@@ -24,47 +24,32 @@ public class LanguageHandler extends DefaultHandler {
     private int processed = 0;
     private final int batchSize;
     private final Consumer<List<Language>> consumer;
-    private final List<Language> languages = new ArrayList<>();
-
-    private Language currentLanguage;
+    private final List<Language> entities = new ArrayList<>();
+    private Language currentEntity;
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equals(LANGUAGE)) {
-            currentLanguage = new Language();
-            populateFields(currentLanguage, attributes);
+            currentEntity = new Language();
+            processAttributes(currentEntity, attributes);
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equals(LANGUAGE) && currentLanguage != null) {
-            languages.add(currentLanguage);
+        if (qName.equals(LANGUAGE) && currentEntity != null) {
+            entities.add(currentEntity);
 
-            if (languages.size() == batchSize) {
-                flush();
+            if (entities.size() == batchSize) {
+                processed += flush(consumer, entities);
             }
         }
     }
 
     @Override
     public void endDocument() throws SAXException {
-        if (!languages.isEmpty()) {
-            flush();
+        if (!entities.isEmpty()) {
+            processed += flush(consumer, entities);
         }
-    }
-
-    /**
-     * Passing current suppliers batch to consumer
-     */
-    private void flush() {
-        try {
-            consumer.accept(languages);
-        } catch (Exception e) {
-            log.error("{}", e.getMessage());
-        }
-        processed += languages.size();
-        log.debug("{}: processed {} entries", getClass().getSimpleName(), languages.size());
-        languages.clear();
     }
 }
