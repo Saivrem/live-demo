@@ -1,0 +1,90 @@
+/* Icecat Live overrides stay inside the embedded result, never in application chrome.
+   See https://iceclog.com/manual-icecat-live-for-granular-call/ (Look & Feel).
+   Current SDKs load their own component CSS; these scoped rules layer on top. */
+.live-result {
+    --icecat-main-color: var(--ayu-text);
+    --icecat-gray-color: var(--ayu-muted);
+    --live-row: var(--ayu-surface);
+    --live-row-alt: var(--ayu-table-row-alt);
+    --live-group: var(--ayu-table-group);
+    --live-border: var(--ayu-table-border);
+    color: var(--ayu-text);
+    min-width: 0;
+    width: 100%;
+}
+.live-staging { position: absolute; left: -100000px; top: 0; visibility: hidden; pointer-events: none; }
+.live-granular-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.live-slot { min-width: 0; }
+.live-slot:empty { display: none; }
+.live-wide { grid-column: 1 / -1; }
+#content .live-result .IcecatLive { color: var(--ayu-text); max-width: 100%; }
+#content .live-result .IcecatLive :is(h1, h2, h3, h4, h5, h6) { color: var(--ayu-heading); background: transparent; }
+#content .live-result .IcecatLive a { color: var(--ayu-link); }
+#content .live-result .IcecatLive :is(.-header, .-icecat-div_table_cell, .-icecat-tableData, .-icecat-head, .-icecat-left, .-icecat-right, .-text) { color: var(--ayu-text); }
+#content .live-result .IcecatLive :is(.-icecat-featureGroup, .-icecat-tableRow, .-icecat-tableData) { border-color: var(--ayu-border); }
+#content .live-result .IcecatLive .-icecat-review .-icecat-head { background-color: var(--ayu-header); }
+#content .live-result .IcecatLive :is(.-icecat-tooltip-containeer > div, .description-box) { color: var(--ayu-text); background: var(--ayu-raised); border-color: var(--ayu-border); }
+#content .live-result .IcecatLive .-bp-container span { color: var(--ayu-text); }
+/* Nuka gallery controls are native buttons. Never apply app button widths/padding. */
+#content .live-result :is(.slider-control-centerleft, .slider-control-centerright) button {
+    width: 32px;
+    min-width: 0;
+    height: 40px;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ayu-text);
+    box-shadow: none;
+}
+#content .live-result :is(.slider-control-centerleft, .slider-control-centerright) button:hover { background: var(--ayu-hover); }
+#content .live-result :is(.slider-control-centerleft, .slider-control-centerright) button:focus-visible { outline: 2px solid var(--ayu-focus); outline-offset: 2px; }
+#content .live-result .slider, #content .live-result .slider-frame { max-width: 100%; min-width: 0; }
+#content .live-result .icecatlive-gallery-wrapper, #content .live-result .icecatlive-right-wrapper { max-width: 100%; }
+#content .live-result .IcecatLive img { max-width: 100%; }
+@media (max-width: 700px) { .live-granular-grid { grid-template-columns: minmax(0, 1fr); } }
+
+#content .live-result .IcecatLive :is(p, li, td, th, .-title, .-text) { color: var(--ayu-text); }
+#content .live-granular-grid > .demo-msg { grid-column: 1 / -1; padding: 0 0 8px; color: var(--ayu-muted); font-size: 12px; font-weight: 400; }
+#content .live-result .demo-msg a { color: var(--ayu-link); }
+#content .live-result[data-block-count="1"] .live-slot { grid-column: 1 / -1; }
+
+/* Feature tables follow the active site theme, including the SDK's striped rows. */
+#content .live-result .IcecatLive .-icecat-feature-group {
+    border: 1px solid var(--live-border);
+    background-color: var(--live-row);
+}
+#content .live-result .IcecatLive .-icecat-table[tab="featureGroups_tpl"] {
+    color: var(--ayu-text);
+    background: transparent;
+    border-color: var(--live-border);
+}
+#content .live-result .IcecatLive .-icecat-table[tab="featureGroups_tpl"] .-icecat-tableRow {
+    color: var(--ayu-text);
+    background-color: var(--live-row);
+    border-color: var(--live-border);
+}
+#content .live-result .IcecatLive .-icecat-table[tab="featureGroups_tpl"] .-icecat-tableRow:nth-child(odd) {
+    background-color: var(--live-row-alt);
+}
+#content .live-result .IcecatLive .-icecat-table[tab="featureGroups_tpl"] :is(.-icecat-ds_label, .-icecat-ds_data) {
+    color: var(--ayu-text);
+    background: transparent;
+    border-color: var(--live-border);
+}
+#content .live-result .IcecatLive .-icecat-table[tab="featureGroups_tpl"] :is(.-icecat-tableRowHead, .-icecat-tableRowHead span) {
+    color: var(--ayu-heading);
+    background-color: var(--live-group);
+    border-color: var(--live-border);
+}
+#content .live-result .IcecatLive .-icecat-tip-anchor { border-bottom-color: var(--ayu-muted); }
+#content .live-result .IcecatLive .-icecat-tooltip-containeer > div {
+    color: var(--ayu-text);
+    background: var(--ayu-raised);
+    border-color: var(--live-border);
+    box-shadow: 0 6px 18px var(--ayu-shadow);
+}

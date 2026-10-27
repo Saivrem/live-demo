@@ -9,7 +9,7 @@ let indent = "    ";
 /**
  * Everything below should start only when the index page is fully loaded
  */
-window.onload = async function () {
+document.addEventListener('DOMContentLoaded', async function () {
 
     /**
      * Protocol
@@ -61,7 +61,7 @@ window.onload = async function () {
     const inputFields = {
         appKey: document.getElementById("appkey"),
         fields: document.querySelectorAll('input[type=text]'),
-        checkBoxes: document.querySelectorAll("input[type=checkbox]"),
+        checkBoxes: document.querySelectorAll('.asset-option input[type=checkbox]'),
         language: document.getElementById("lang")
     };
 
@@ -71,11 +71,12 @@ window.onload = async function () {
      * productId: HTMLElement,
      * mpn: HTMLElement}}
      */
-    const radioButtons = {
-        mpn: document.getElementById("mpnRadio"),
-        ean: document.getElementById("eanRadio"),
-        productId: document.getElementById("productIdRadio")
-    };
+    const identifierType = document.getElementById('identifierType');
+    const requestFormat = document.getElementById('requestFormat');
+    const requestForm = document.getElementById('requestForm');
+    let requestBusy = false;
+    let liveRequestNumber = 0;
+    let liveSdkPromise;
 
     /**
      * Buttons on the page
@@ -95,18 +96,13 @@ window.onload = async function () {
      * }}
      */
     const buttons = {
-        json: document.getElementById("jsoncall"),
-        jsonLink: document.getElementById("jsoncall2"),
-        xmls3: document.getElementById("xmls3"),
-        foButton: document.getElementById("foRequest"),
-        liveFull: document.getElementById("liveFullRequest"),
-        liveFullGetCode: document.getElementById("LiveFullGetCode"),
-        liveGranular: document.getElementById("granularSubmit"),
-        liveGranularGetCode: document.getElementById("liveGranularGetCode"),
-        copyLink: document.getElementById("copyLinkButton"),
-        checkAllBoxes: document.getElementById("selectAllCheck"),
-        output: document.getElementById("output"),
-        clearButton: document.getElementById("clear")
+        json: document.getElementById('jsoncall'),
+        jsonLink: document.getElementById('jsoncall2'),
+        code: document.getElementById('getRequestCode'),
+        copyLink: document.getElementById('copyLinkButton'),
+        checkAllBoxes: document.getElementById('selectAllCheck'),
+        output: document.getElementById('output'),
+        clearButton: document.getElementById('clear')
     };
 
     /**
@@ -131,7 +127,6 @@ window.onload = async function () {
         mainContainer: document.getElementById('content'),
         popUpContent: document.getElementById("popUpContent"),
         popUp: document.getElementById("popUp"),
-        share: document.getElementById("shareLink"),
         trash: document.getElementById("copyBox"),
         indexDropdown: document.getElementById("indexDropdown"),
         refsDropdown: document.getElementById("refDropdown"),
@@ -207,225 +202,206 @@ window.onload = async function () {
         'Personalized interface': 'manuals-personalized-interface-files-and-catalogs'
     }
 
-    const repository = {
-        open: document.getElementById("Open"),
-        full: document.getElementById("Full")
+    const resourceRepository = document.getElementById('resourceRepository');
+    const formats = {
+        json: { action: 'Show JSON', help: 'View JSON here, or open the response in a new tab.', execute: previewJson },
+        xml: { action: 'Open XML / CSV', help: 'XML and CSV responses open in a new tab.', execute: openXml },
+        liveFull: { action: 'Show Icecat Live', help: 'Render the complete Icecat product datasheet below.', execute: executeFullLive },
+        liveGranular: { action: 'Show selected blocks', help: 'Choose the product content blocks to render below.', execute: executeGranularLive },
+        fo: { action: 'Open product page', help: 'Available when searching by Icecat product ID. Opens in a new tab.', execute: openProductPage }
+    };
+
+    function refreshResourceLinks() {
+        dropdownSetter('indexDropdownBody');
+        dropdownSetter('refDropdownBody');
+        dropdownSetter('documentsBody');
+    }
+    [areas.indexDropdown, areas.refsDropdown, areas.documentsDropdown].forEach(group => {
+        group.addEventListener('toggle', () => { if (group.open) refreshResourceLinks(); });
+    });
+    resourceRepository.addEventListener('change', refreshResourceLinks);
+    inputFields.language.addEventListener('change', refreshResourceLinks);
+    const resourcesMenu = document.getElementById('resourcesMenu');
+    document.addEventListener('click', event => {
+        if (!resourcesMenu.contains(event.target)) resourcesMenu.open = false;
+    });
+    resourcesMenu.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            resourcesMenu.open = false;
+            resourcesMenu.querySelector('summary').focus();
+        }
+    });
+
+    function updateRequestUi() {
+        const names = { brandMpn: ['brand', 'mpn'], ean: ['ean'], id: ['productId'] }[identifierType.value];
+        enableInputFields(names);
+        document.querySelectorAll('[data-identifier-field]').forEach(field => {
+            field.hidden = !names.includes(field.dataset.identifierField);
+        });
+        const format = requestFormat.value;
+        buttons.json.textContent = requestBusy ? 'Loading…' : formats[format].action;
+        buttons.jsonLink.hidden = format !== 'json';
+        buttons.code.hidden = !['liveFull', 'liveGranular'].includes(format);
+        document.getElementById('xmlOutputField').hidden = format !== 'xml';
+        document.getElementById('formatHelp').textContent = formats[format].help;
+        document.getElementById('contentSettings').hidden = !['json', 'liveGranular'].includes(format);
+        document.getElementById('contentSettingsLabel').textContent = format === 'liveGranular' ? 'Select content blocks' : 'Choose JSON fields · optional';
+        document.getElementById('contentHelp').textContent = format === 'liveGranular'
+            ? 'Select at least one block to display.' : 'Leave all unchecked to request the full JSON response.';
+        inputFields.checkBoxes.forEach(checkbox => {
+            const unavailable = format === 'liveGranular' && ['generalinfoCheck', 'imageCheck', 'relatedCheck'].includes(checkbox.id);
+            checkbox.disabled = unavailable;
+            checkbox.closest('.asset-option').hidden = unavailable;
+        });
+        const available = [...inputFields.checkBoxes].filter(checkbox => !checkbox.disabled);
+        const checked = available.filter(checkbox => checkbox.checked).length;
+        buttons.checkAllBoxes.checked = checked === available.length;
+        buttons.checkAllBoxes.indeterminate = checked > 0 && checked < available.length;
+        requestFormat.disabled = requestBusy;
+        identifierType.disabled = requestBusy;
+        requestForm.querySelectorAll('.request-toolbar button').forEach(button => { button.disabled = requestBusy; });
+        if (format === 'fo' && identifierType.value !== 'id') buttons.json.disabled = true;
+    }
+    identifierType.addEventListener('change', updateRequestUi);
+    requestFormat.addEventListener('change', () => {
+        updateRequestUi();
+        if (requestFormat.value === 'liveGranular') document.getElementById('contentSettings').open = true;
+    });
+    buttons.checkAllBoxes.addEventListener('change', event => { checkAll(event); updateRequestUi(); });
+    inputFields.checkBoxes.forEach(checkbox => checkbox.addEventListener('change', updateRequestUi));
+    requestForm.addEventListener('input', () => { linkBuilder = ''; });
+    requestForm.addEventListener('change', () => { linkBuilder = ''; });
+    buttons.clearButton.addEventListener('click', () => { document.location.search = ''; });
+    document.getElementById('retryRequest').addEventListener('click', () => requestForm.requestSubmit());
+    requestForm.addEventListener('submit', event => {
+        event.preventDefault();
+        if (requestBusy || validateRadio() === 'null') return;
+        try {
+            if (!['xml', 'fo'].includes(requestFormat.value) && !notEmpty(getInputFieldsValues().username)) {
+                document.getElementById('accountSettings').open = true;
+                document.getElementById('username').focus();
+                throw new Error(responses.userNameIsNotSet);
+            }
+            formats[requestFormat.value].execute();
+        } catch (reason) {
+            error(reason);
+        }
+    });
+    buttons.jsonLink.addEventListener('click', () => {
+        try {
+            if (validateRadio() === 'null') return;
+            const link = jsonLinkBuilder();
+            if (!link) return;
+            buildLinkForShare('json');
+            window.open(link, '_blank', 'noopener');
+            setFeedback('Opening JSON in a new tab.', 'success');
+        } catch (reason) { error(reason); }
+    });
+    buttons.code.addEventListener('click', () => {
+        try {
+            if (validateRadio() === 'null') return;
+            if (requestFormat.value === 'liveGranular' && Object.keys(getAssets()).length === 0) {
+                throw new Error('Select at least one content block.');
+            }
+            areas.getCodeModal.innerText = requestFormat.value === 'liveGranular' ? getGranularLiveCode() : getFullLiveCode();
+            document.getElementById('codeCopyStatus').textContent = '';
+            new bootstrap.Modal(document.getElementById('getCodeModal')).show();
+        } catch (reason) { error(reason); }
+    });
+    document.getElementById('copyEmbedCode').addEventListener('click', async () => {
+        try {
+            await copyLink(areas.getCodeModal.textContent);
+            document.getElementById('codeCopyStatus').textContent = 'Embed code copied.';
+        } catch {
+            document.getElementById('codeCopyStatus').textContent = 'Could not copy. Select the code and copy it manually.';
+        }
+    });
+    buttons.copyLink.addEventListener('click', async () => {
+        try {
+            if (!linkBuilder) buildLinkForShare(null);
+            await copyLink(linkBuilder);
+            setFeedback('Request link copied.', 'success');
+        } catch (reason) { error(reason); }
+    });
+
+    function setFeedback(message, state) {
+        areas.popUp.hidden = false;
+        areas.popUp.setAttribute('role', state === 'error' ? 'alert' : 'status');
+        areas.popUp.dataset.state = state;
+        areas.popUpContent.textContent = message;
+        document.getElementById('retryRequest').hidden = state !== 'error' || requestBusy;
+    }
+    function beginRequest(message) {
+        requestBusy = true;
+        areas.mainContainer.setAttribute('aria-busy', 'true');
+        setFeedback(message, 'loading');
+        updateRequestUi();
+    }
+    function finishRequest() {
+        requestBusy = false;
+        areas.mainContainer.setAttribute('aria-busy', 'false');
+        updateRequestUi();
+        document.getElementById('retryRequest').hidden = areas.popUp.dataset.state !== 'error';
+    }
+    function requestSucceeded(message) {
+        document.getElementById('resultSummary').textContent = message;
+        setFeedback(message, 'success');
+        scroll('content');
+    }
+    function previewJson() {
+        const requestLanguage = inputFields.language.value;
+        const link = jsonLinkBuilder();
+        if (!link) return;
+        buildLinkForShare('json');
+        beginRequest('Loading JSON. The previous result stays visible until the new response is ready.');
+        $.getJSON(link).done(result => {
+            const viewer = new JSONViewer();
+            viewer.showJSON(result.data === undefined ? result : result.data, null, 2);
+            areas.mainContainer.replaceChildren(viewer.getContainer());
+            requestSucceeded('JSON response · ' + requestLanguage);
+        }).fail(error).always(finishRequest);
+    }
+    function openXml() {
+        const fields = getInputFieldsValues();
+        let params = 'lang=' + encodeURIComponent(inputFields.language.value) + ';';
+        switch (validateRadio()) {
+            case 'id': params += 'icecat_id=' + encodeURIComponent(fields.productId); break;
+            case 'ean': params += 'ean_upc=' + encodeURIComponent(fields.ean); break;
+            case 'brandMpn': params += 'prod_id=' + encodeURIComponent(fields.mpn) + ';vendor=' + encodeURIComponent(fields.brand); break;
+            default: return;
+        }
+        buildLinkForShare('xml');
+        window.open(protocol + xmlDomain + params + ';output=' + encodeURIComponent(buttons.output.value), '_blank', 'noopener');
+        setFeedback('Opening ' + buttons.output.selectedOptions[0].textContent + ' in a new tab.', 'success');
+    }
+    function openProductPage() {
+        if (validateRadio() !== 'id') { popUp(responses.onlyId); return; }
+        buildLinkForShare('fo');
+        window.open(protocol + coreDomain + inputFields.language.value.toLowerCase() + foLinkPart
+            + encodeURIComponent(getInputFieldsValues().productId) + '.html', '_blank', 'noopener');
+        setFeedback('Opening the Icecat product page in a new tab.', 'success');
+    }
+    function executeFullLive() {
+        const properties = getRequestProperties();
+        properties.Type = 'html';
+        buildLinkForShare('liveFull');
+        liveFullExecute(properties, inputFields.language.value);
+    }
+    function executeGranularLive() {
+        const assets = getAssets();
+        if (Object.keys(assets).length === 0) { popUp('Select at least one content block.'); return; }
+        const properties = getRequestProperties();
+        buildLinkForShare('liveGranular');
+        liveGranularExecute(assets, properties, inputFields.language.value);
     }
 
-    /**
-     * Index Dropdown menu listener
-     */
-    areas.indexDropdown.addEventListener('click', () => {
-        dropdownSetter("indexDropdownBody");
-    });
-
-    /**
-     * Ref files dropdown menu listener
-     */
-    areas.refsDropdown.addEventListener('click', () => {
-        dropdownSetter("refDropdownBody");
-    });
-
-    /**
-     * Documents dropdown listener
-     */
-    areas.documentsDropdown.addEventListener('click', () => {
-        dropdownSetter("documentsBody");
-    })
-
-    /**
-     * Checkbox setter/un setter;
-     */
-    buttons.checkAllBoxes.addEventListener('change', (event) => {
-        checkAll(event);
-    });
-
-    /**
-     * listener for productId radio
-     */
-    radioButtons.productId.addEventListener('click', () => {
-        enableFORequest();
-        enableInputFields(['productId']);
-    });
-    /**
-     * listener for mpn radio
-     */
-    radioButtons.mpn.addEventListener('click', () => {
-        disableFORequest();
-        enableInputFields(['mpn', 'brand']);
-    });
-    /**
-     * listener for ean radio
-     */
-    radioButtons.ean.addEventListener('click', () => {
-        disableFORequest();
-        enableInputFields(['ean']);
-    });
-
-    /**
-     * Event listener for clear button;
-     */
-    buttons.clearButton.addEventListener('click', () => {
-        document.location.search = "";
-    });
-
-    /**
-     * Listener for copyLink button
-     */
-    buttons.copyLink.addEventListener('click', () => {
-        if ((linkBuilder == null) || equals(linkBuilder, "")) {
-            buildLinkForShare(null);
-        }
-        copyLink(linkBuilder);
-        buttons.copyLink.classList.remove("btn-info");
-        buttons.copyLink.classList.add("btn-success");
-        buttons.copyLink.innerText = "Link Copied";
-        setTimeout(function () {
-            buttons.copyLink.classList.remove("btn-success");
-            buttons.copyLink.classList.add("btn-info");
-            buttons.copyLink.innerText = "Copy Link";
-            linkBuilder = "";
-        }, 500);
-    });
-
-    /**
-     * FO request function
-     */
-    buttons.foButton.addEventListener('click', () => {
-        let fields = getInputFieldsValues();
-        switch (validateRadio()) {
-            case "id":
-                let link = protocol + coreDomain
-                    + (inputFields.language.value).toLowerCase()
-                    + foLinkPart
-                    + fields["productId"]
-                    + ".html";
-                buildLinkForShare("fo");
-                window.open(link);
-                break;
-            case "ean":
-            case "brandMpn":
-            default:
-                popUp(responses.onlyId, 1500);
-                break;
-        }
-    });
-
-    /**
-     * JSON request, also granular JSON request is possible;
-     * Renders JSON into the same window;
-     */
-    buttons.json.addEventListener('click', () => {
-
-        let link = jsonLinkBuilder();
-
-        areas.mainContainer.innerHTML = `<div class="container"><div id="json" style="height:100%;"></div></div>`;
-        $.getJSON(link, function (result) {
-            let jsonViewer = new JSONViewer();
-            document.querySelector("#json").appendChild(jsonViewer.getContainer());
-            jsonViewer.showJSON(result.data, null, 2);
-            buildLinkForShare("json");
-        }).then(() => {
-            scroll("content")
-        }).catch(reason => {
-            error(reason);
-        });
-
-    });
-
-    /**
-     * Open JSON in separate tab listener
-     */
-    buttons.jsonLink.addEventListener('click', () => {
-        let link = jsonLinkBuilder();
-        buildLinkForShare("json");
-        window.open(link);
-    });
-
-    /**
-     * XML S3 request. Supports three output formats:
-     * Product XML;
-     * Product CSV;
-     * Meta XML;
-     */
-    buttons.xmls3.addEventListener('click', () => {
-
-        let fields = getInputFieldsValues();
-
-        let link = protocol;
-
-        link += xmlDomain + "lang=" + (inputFields.language.value) + ";";
-
-        switch (validateRadio()) {
-            case "id":
-                link += "icecat_id=" + fields["productId"] + ";";
-                break;
-            case "ean":
-                link += "ean_upc=" + fields["ean"] + ";";
-                break;
-            case "brandMpn":
-                link += "prod_id=" + fields["mpn"] + ";" + "vendor=" + fields["brand"] + ";";
-                break;
-            default:
-                return;
-
-        }
-
-        link += "output=" + buttons.output.value;
-        buildLinkForShare("xml");
-        window.open(link);
-    });
-
-    /**
-     * Full Live request button listener;
-     */
-    buttons.liveFull.addEventListener('click', () => {
-        let requestLang = inputFields.language.value;
-        let requestProperties = getRequestProperties();
-        requestProperties['Type'] = 'html';
-        clearLiveContainer();
-        buildLinkForShare("liveFull");
-        liveFullExecute(requestProperties, requestLang);
-    });
-
-    buttons.liveGranular.addEventListener('click', () => {
-        let requestLang = inputFields.language.value;
-        let requestProperties = getRequestProperties();
-
-        let assets = getAssets();
-
-        if (Object.keys(assets).length === 0) {
-            popUp(responses.nullResponse, 1500);
-        }
-
-
-        clearLiveContainer();
-        buildLinkForShare("liveGranular");
-        liveGranularExecute(assets, requestProperties, requestLang);
-
-    });
-
-    /**
-     * Listener for code generator
-     */
-    buttons.liveGranularGetCode.addEventListener('click', () => {
-            areas.getCodeModal.innerText = getGranularLiveCode();
-        }
-    )
-
-    /**
-     * Listener for code generator
-     */
-    buttons.liveFullGetCode.addEventListener('click', () => {
-        areas.getCodeModal.innerText = getFullLiveCode();
-    });
-
     function stringifyRequestProperties(requestProperties) {
-        let builder = new StringBuilder("");
+        let builder = new StringBuilder('');
         for (const [key, value] of Object.entries(requestProperties)) {
             if (key !== 'selectAll') {
                 builder.append(indent).append(indent).append(indent)
-                    .append(`'`).append(key).append(`': '`).append(value).append(`\',\n`);
+                    .append(JSON.stringify(key)).append(': ')
+                    .append(JSON.stringify(value).replace(/</g, '\\u003c')).append(',\n');
             }
         }
         return builder.toString();
@@ -440,7 +416,7 @@ window.onload = async function () {
     function getAssets() {
         let assets = {};
         inputFields.checkBoxes.forEach(function (element) {
-            if (element.checked) {
+            if (element.checked && !element.disabled) {
                 let key = element.id.replace('Check', '');
                 assets[key] = "#" + key;
             }
@@ -480,10 +456,11 @@ window.onload = async function () {
                     requestProperties['PartCode'] = inputFieldsValues['mpn'];
                     break;
                 default:
-                    return;
+                    throw new Error('Enter a product identifier.');
             }
         } else {
-            popUp(responses.userNameIsNotSet, 1500);
+            document.getElementById('accountSettings').open = true;
+            throw new Error(responses.userNameIsNotSet);
         }
         return requestProperties;
     }
@@ -527,8 +504,13 @@ window.onload = async function () {
          * @param file string parameter with the file name;
          */
         function appendMenuItem(file) {
-            let menuItem = '<a class="dropdown-item" target="_blank" href="' + link + '">' + file + '</a>';
-            targetMenu.append(menuItem);
+            const item = document.createElement('a');
+            item.className = 'dropdown-item';
+            item.href = link;
+            item.target = '_blank';
+            item.rel = 'noopener noreferrer';
+            item.textContent = file;
+            targetMenu[0].append(item);
         }
 
     }
@@ -539,39 +521,54 @@ window.onload = async function () {
      * @param requestLang lang field, should be predefined;
      */
     function liveFullExecute(requestFields, requestLang) {
-        IcecatLive.getDatasheet('#content', requestFields, requestLang).then(() => {
-            scroll("icecatLiveMainContainer");
-        }).catch(reason => {
-            error(reason);
-        })
+        renderLive(null, requestFields, requestLang);
     }
 
-    /**
-     * Live granular call executor
-     * @param assets Object with granular call assets
-     * @param requestFields Object with properties (username, product identifiers);
-     * @param requestLang lang fiend, should be predefined;
-     */
     function liveGranularExecute(assets, requestFields, requestLang) {
-        IcecatLive.getDatasheet(assets, requestFields, requestLang).then(() => {
-            scroll("content")
-        }).catch(reason => {
+        renderLive(assets, requestFields, requestLang);
+    }
+
+    function loadLiveSdk() {
+        if (window.IcecatLive) return Promise.resolve();
+        if (!liveSdkPromise) {
+            const script = document.createElement('script');
+            script.src = 'https://live.icecat.biz/js/live-current-2.js';
+            liveSdkPromise = new Promise((resolve, reject) => {
+                script.onload = () => window.IcecatLive ? resolve() : reject(new Error('Icecat Live did not initialize. Please retry.'));
+                script.onerror = () => reject(new Error('Could not load Icecat Live. Check the connection and retry.'));
+                document.head.append(script);
+            }).catch(reason => { liveSdkPromise = null; script.remove(); throw reason; });
+        }
+        return liveSdkPromise;
+    }
+
+    async function renderLive(assets, requestFields, requestLang) {
+        const stage = document.createElement('div');
+        stage.id = 'live-request-' + (++liveRequestNumber);
+        stage.className = 'live-result live-staging';
+        stage.style.width = areas.mainContainer.getBoundingClientRect().width + 'px';
+        document.querySelector('.result-panel').append(stage);
+        let target = '#' + stage.id;
+        if (assets) {
+            stage.dataset.blockCount = String(Object.keys(assets).length);
+            stage.append(document.importNode(areas.liveTemplate.content, true));
+            stage.querySelectorAll('[id]').forEach(element => { element.id = stage.id + '-' + element.id; });
+            target = Object.fromEntries(Object.entries(assets).map(([name, selector]) => [name, '#' + stage.id + '-' + selector.slice(1)]));
+        }
+        beginRequest('Loading Icecat Live. The previous result stays visible until the response is ready.');
+        try {
+            await loadLiveSdk();
+            await IcecatLive.getDatasheet(target, requestFields, requestLang);
+            stage.classList.remove('live-staging');
+            stage.style.removeProperty('width');
+            areas.mainContainer.replaceChildren(stage);
+            requestSucceeded((assets ? 'Selected Live blocks' : 'Icecat Live datasheet') + ' · ' + requestLang);
+        } catch (reason) {
+            stage.remove();
             error(reason);
-        });
-    }
-
-    /**
-     * disabler for FO request button
-     */
-    function disableFORequest() {
-        buttons.foButton.disabled = true;
-    }
-
-    /**
-     * enabler for FO request button
-     */
-    function enableFORequest() {
-        buttons.foButton.disabled = false;
+        } finally {
+            finishRequest();
+        }
     }
 
     /**
@@ -593,39 +590,18 @@ window.onload = async function () {
      * @param object - reason for error;
      */
     function error(object) {
-        let regex = /(<([^>]+)>)/ig;
-        let errorMessage = object.responseText.replace(regex, "");
-        popUp(errorMessage, 1500);
+        const message = typeof object === 'string' ? object
+            : object?.responseJSON?.message || object?.message || (object?.status ? 'Request failed (HTTP ' + object.status + ').' : 'Could not load the response. Check the connection and try again.');
+        setFeedback(message, 'error');
     }
 
-    /**
-     * PopUp wrapper.
-     * @param message to be shown;
-     * @param timeout the time amount of popUp indication
-     */
-    function popUp(message, timeout) {
-        areas.popUpContent.innerText = message;
-        areas.popUp.style.display = "block";
-        setTimeout(function () {
-            areas.popUp.style.display = "none";
-        }, timeout);
+    function popUp(message) {
+        setFeedback(message, 'error');
     }
 
-    /**
-     * Autoscroll to opened content (live, granular live, json);
-     * @param id div ID where to scroll to;
-     */
     function scroll(id) {
-        document.getElementById(id).scrollIntoView(true);
-    }
-
-    /**
-     * Clears the content div
-     */
-    function clearLiveContainer() {
-        areas.liveArea.innerHTML = "";
-        let clone = document.importNode(areas.liveTemplate.content, true);
-        areas.liveArea.appendChild(clone);
+        const target = document.getElementById(id) || areas.mainContainer;
+        target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     }
 
     /**
@@ -633,27 +609,15 @@ window.onload = async function () {
      * @returns {string}
      */
     function validateRadio() {
-        let fieldsToValidate = getInputFieldsValues();
-        if (radioButtons.productId.checked) {
-            if (notEmpty(fieldsToValidate["productId"])) {
-                return "id";
-            } else {
-                popUp(responses.idIsNotSet, 1500);
-            }
-        } else if (radioButtons.ean.checked) {
-            if (notEmpty(fieldsToValidate["ean"])) {
-                return "ean";
-            } else {
-                popUp(responses.eanIsNotSet, 1500);
-            }
-        } else if (radioButtons.mpn.checked) {
-            if (notEmpty(fieldsToValidate["brand"]) && notEmpty(fieldsToValidate["mpn"])) {
-                return "brandMpn";
-            } else {
-                popUp(responses.brandOrMpnIsNotSet, 1500)
-            }
-        }
-        return "null";
+        const fields = getInputFieldsValues();
+        const mode = identifierType.value;
+        if (mode === 'id' && notEmpty(fields.productId)) return 'id';
+        if (mode === 'ean' && notEmpty(fields.ean)) return 'ean';
+        if (mode === 'brandMpn' && notEmpty(fields.brand) && notEmpty(fields.mpn)) return 'brandMpn';
+        popUp(mode === 'id' ? responses.idIsNotSet : mode === 'ean' ? responses.eanIsNotSet : responses.brandOrMpnIsNotSet);
+        const missing = mode === 'id' ? 'productId' : mode === 'ean' ? 'ean' : !notEmpty(fields.brand) ? 'brand' : 'mpn';
+        document.getElementById(missing).focus();
+        return 'null';
     }
 
     /**
@@ -663,7 +627,7 @@ window.onload = async function () {
     function getContent() {
         let content = "";
         inputFields.checkBoxes.forEach(function (element) {
-            if (element.checked) {
+            if (element.checked && !element.disabled) {
                 let asset = element.id.replace('Check', '');
                 if (equals(asset, "videos") || equals(asset, "tours3d")) {
                     if (!content.includes("multimedia")) {
@@ -685,9 +649,9 @@ window.onload = async function () {
         let link = protocol + jsonDomain;
         let fields = getInputFieldsValues();
         if (notEmpty(fields["username"])) {
-            link += "shopname=" + fields["username"];
+            link += "shopname=" + encodeURIComponent(fields["username"]);
             if (notEmpty(fields["appkey"])) {
-                link += "&app_key=" + fields["appkey"];
+                link += "&app_key=" + encodeURIComponent(fields["appkey"]);
             }
         } else {
             popUp(responses.userNameIsNotSet, 1500);
@@ -698,13 +662,13 @@ window.onload = async function () {
 
         switch (validateRadio()) {
             case "id":
-                link += "&icecat_id=" + fields["productId"];
+                link += "&icecat_id=" + encodeURIComponent(fields["productId"]);
                 break;
             case "ean":
-                link += "&GTIN=" + fields["ean"];
+                link += "&GTIN=" + encodeURIComponent(fields["ean"]);
                 break;
             case "brandMpn":
-                link += "&Brand=" + fields["brand"] + "&ProductCode=" + fields["mpn"];
+                link += "&Brand=" + encodeURIComponent(fields["brand"]) + "&ProductCode=" + encodeURIComponent(fields["mpn"]);
                 break;
             default:
                 return;
@@ -721,7 +685,7 @@ window.onload = async function () {
      */
     function checkAll(event) {
         inputFields.checkBoxes.forEach(function (element) {
-            element.checked = !!event.target.checked;
+            if (!element.disabled) element.checked = !!event.target.checked;
         });
     }
 
@@ -729,11 +693,7 @@ window.onload = async function () {
      * @returns {string}
      */
     function getRepo() {
-        if (repository.open.checked) {
-            return "freexml/";
-        } else {
-            return "level4/";
-        }
+        return resourceRepository.value;
     }
 
     /**
@@ -742,7 +702,7 @@ window.onload = async function () {
      * @returns {boolean}
      */
     function notEmpty(object) {
-        return object !== "";
+        return object != null && String(object).trim() !== '';
     }
 
     /***
@@ -764,87 +724,24 @@ window.onload = async function () {
      * The link is stored in variable linkBuilder;
      */
     function buildLinkForShare(requestType) {
-
-        let radioButton = validateRadio();
-        let productIdentifiers = [];
-        let values = {};
-
-        inputFields.fields.forEach((element) => {
-            values[element.id] = element.value;
-        });
-
-        if (!(equals(requestType, "xml"))) {
-            if (notEmpty(values.username)) {
-                productIdentifiers[productIdentifiers.length] = ["username", values.username].join("=");
-            }
-            if (notEmpty(inputFields.appKey.value)) {
-                productIdentifiers[productIdentifiers.length] = ["app_key", inputFields.appKey.value].join("=");
-            }
+        const fields = getInputFieldsValues();
+        const params = new URLSearchParams();
+        if (requestType !== 'xml') {
+            if (notEmpty(fields.username)) params.set('username', fields.username);
+            if (notEmpty(inputFields.appKey.value)) params.set('app_key', inputFields.appKey.value);
         }
-
-        switch (radioButton) {
-            case "id":
-                productIdentifiers[productIdentifiers.length] = ["productId", values.productId].join("=");
-                break;
-            case "ean":
-                productIdentifiers[productIdentifiers.length] = ["ean", values.ean].join("=");
-                break;
-            case "brandMpn":
-                productIdentifiers[productIdentifiers.length] = ["mpn", values.mpn].join("=");
-                productIdentifiers[productIdentifiers.length] = ["brand", values.brand].join("=");
-                break;
-            default:
-                inputFields.fields.forEach((element) => {
-                    if (notEmpty(element.value)) {
-                        productIdentifiers[productIdentifiers.length] = [element.name, element.value].join("=");
-                    }
-                });
-                break;
-        }
-        productIdentifiers[productIdentifiers.length] = ["lang", inputFields.language.value].join("=");
-
-        let content = "&content=";
-        inputFields.checkBoxes.forEach((element) => {
-            if (element.checked) {
-                let name = element.id.replace("Check", "");
-                content += name + ",";
-            }
-        });
-
-        if (equals(content, "&content=")) {
-            content = "";
-        }
-
-        linkBuilder = document.location.origin + document.location.pathname;
-        linkBuilder += "?";
-        linkBuilder += productIdentifiers.join("&");
-        linkBuilder += "&radio=" + radioButton;
-
-        if (equals(requestType, 'xml')) {
-            linkBuilder += "&output=" + buttons.output.value;
-        }
-
-        linkBuilder += content;
-        switch (requestType) {
-            case "json":
-                linkBuilder += "&requestType=json";
-                break;
-            case "fo":
-                linkBuilder += "&requestType=fo";
-                break;
-            case "xml":
-                linkBuilder += "&requestType=xml";
-                break;
-            case "liveFull":
-                linkBuilder += "&requestType=liveFull";
-                break;
-            case "liveGranular":
-                linkBuilder += "&requestType=liveGranular";
-                break;
-            default:
-                break;
-        }
-
+        const names = { brandMpn: ['brand', 'mpn'], ean: ['ean'], id: ['productId'] }[identifierType.value];
+        names.forEach(name => { if (notEmpty(fields[name])) params.set(name, fields[name]); });
+        params.set('radio', identifierType.value);
+        params.set('lang', inputFields.language.value);
+        params.set('format', requestFormat.value);
+        params.set('repo', resourceRepository.value);
+        if (requestFormat.value === 'xml') params.set('output', buttons.output.value);
+        const content = [...inputFields.checkBoxes].filter(item => item.checked && !item.disabled)
+            .map(item => item.id.replace('Check', '')).join(',');
+        if (content) params.set('content', content);
+        if (requestType) params.set('requestType', requestType);
+        linkBuilder = document.location.origin + document.location.pathname + '?' + params.toString();
     }
 
     /**
@@ -893,40 +790,35 @@ window.onload = async function () {
     }
 
     function getFullLiveCode() {
-        let requestProperties = getRequestProperties();
-        let code = new StringBuilder("");
-
-        code.append(`<!-- Put this into HEAD --> \n`)
-            .append(`<script src='https://live.icecat.biz/js/live-current-2.js'></script>\n`)
-            .append(`<!-- Put this into BODY -->\n`)
-            .append(`<div id="content"></div>\n`)
-            .append(`<script type="text/javascript">\n`)
-            .append(indent).append(`setTimeout(function(){\n`).append(indent).append(indent)
-            .append(`IcecatLive.getDatasheet('#content', {\n`);
-
-        let properties = stringifyRequestProperties(requestProperties);
-        code.append(properties);
-
+        const properties = stringifyRequestProperties(getRequestProperties());
+        const code = new StringBuilder('<div id="content"></div>\n<script>\n');
+        code.append("window.addEventListener('liveload', function() {\n")
+            .append(indent).append("IcecatLive.getDatasheet('#content', {\n")
+            .append(properties);
         code.removeCharAtIndex(code.toString().length - 1);
-
-        code.append(indent).append(indent)
-            .append('}, ').append(`"`).append(inputFields.language.value)
-            .append('\");\n').append(indent).append(`}, 200);\n`)
-            .append(`</script>\n`);
+        code.append(indent).append('}, ').append(JSON.stringify(inputFields.language.value))
+            .append(');\n});\n</script>\n')
+            .append('<script src="https://live.icecat.biz/js/live-current-2.js"></script>\n');
         codeStash = code.toString();
-        return code.toString();
+        return codeStash;
     }
 
     /**
      * Copies linkBuilder's content into the buffer, if variable is not set, buildLinkForShare(null) will be issues first
      */
-    function copyLink(text) {
-        let textAreaElement = document.createElement("textarea");
-        document.body.appendChild(textAreaElement);
-        textAreaElement.value = text;
-        textAreaElement.select();
-        document.execCommand("copy");
-        document.body.removeChild(textAreaElement);
+    async function copyLink(text) {
+        try {
+            if (navigator.clipboard) { await navigator.clipboard.writeText(text); return; }
+        } catch { /* Fall back for browsers that deny clipboard access. */ }
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.append(textArea);
+        try {
+            textArea.select();
+            if (!document.execCommand('copy')) throw new Error('Clipboard access was denied.');
+        } finally { textArea.remove(); }
     }
 
     /**
@@ -971,53 +863,29 @@ window.onload = async function () {
                     }
                 });
             }
-            switch (urlParams.get("radio")) {
-                case "ean":
-                    radioButtons.ean.checked = true;
-                    enableInputFields(['ean']);
-                    break;
-                case "id":
-                    radioButtons.productId.checked = true;
-                    enableFORequest();
-                    enableInputFields(['productId']);
-                    break;
-                case "brandMpn":
-                default:
-                    radioButtons.mpn.checked = true;
-                    enableInputFields(['mpn', 'brand']);
-                    break;
-            }
-            document.querySelectorAll('.radButtons label').forEach(label => {
-                label.classList.toggle('active', label.querySelector('input').checked);
-            });
+            const sharedIdentifier = urlParams.get('radio');
+            identifierType.value = ['brandMpn', 'ean', 'id'].includes(sharedIdentifier) ? sharedIdentifier : 'brandMpn';
+            const sharedFormat = urlParams.get('format') || urlParams.get('requestType');
+            if (Object.keys(formats).includes(sharedFormat)) requestFormat.value = sharedFormat;
+            if (['freexml/', 'level4/'].includes(urlParams.get('repo'))) resourceRepository.value = urlParams.get('repo');
             if (urlParams.get("output") !== null) {
                 buttons.output.value = urlParams.get("output");
             }
             if (urlParams.get("app_key") !== null) {
                 inputFields.appKey.value = urlParams.get("app_key");
             }
-            switch (urlParams.get("requestType")) {
-                case "liveFull":
-                    buttons.liveFull.click();
-                    break;
-                case "liveGranular":
-                    buttons.liveGranular.click();
-                    break;
-                case "json":
-                    buttons.json.click();
-                    break;
-                case "fo":
-                    buttons.foButton.click();
-                    break;
-                case "xml":
-                    buttons.xmls3.click();
-                    break;
-                default:
-                    break;
-            }
+            updateRequestUi();
+            if (inputFields.appKey.value || fieldsHaveCustomAccount()) document.getElementById('accountSettings').open = true;
+            if (requestFormat.value === 'liveGranular' || content) document.getElementById('contentSettings').open = true;
+            if (Object.keys(formats).includes(urlParams.get('requestType'))) requestForm.requestSubmit();
         }
     }
 
+    function fieldsHaveCustomAccount() {
+        return document.getElementById('username').value !== 'openicecat-live';
+    }
+
+    updateRequestUi();
     const languageStatus = document.getElementById('languageStatus');
     try {
         const response = await fetch('/icedata/api/v2/languages');
@@ -1034,9 +902,9 @@ window.onload = async function () {
         languageStatus.textContent = 'Could not load languages. English is available; reload to retry.';
     }
     inputFields.language.disabled = false;
-    enableInputFields(['mpn', 'brand']);
     readParams();
-}
+    updateRequestUi();
+});
 
 class StringBuilder {
     string;

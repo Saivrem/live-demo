@@ -2,6 +2,38 @@
 
 A web interface for working with Icecat. Apache serves the pages, Java/Spring handles the API and file uploads, and MySQL stores reference data. Fail2ban blocks common scanners using Apache access logs. PHP is no longer required.
 
+## Using Launchpad
+
+Choose **Find by** (Brand + MPN, EAN / GTIN, or Icecat product ID), then choose a
+response type and language. Only the relevant identifier fields are shown.
+**Account settings** contains the Icecat username and optional JSON app key.
+
+- **JSON**: show the response on the page or open JSON in a new tab. Field selection
+  is optional; leave it empty for the complete response.
+- **XML / CSV**: choose Product XML, Meta XML or Product CSV and open it in a new tab.
+- **Icecat Live · full**: show the complete product datasheet.
+- **Icecat Live · selected blocks**: choose at least one block, such as gallery,
+  essential information or specifications.
+- **Icecat product page**: opens the product page when searching by product ID.
+
+Live modes also provide **Get embed code**, with a copy button. **Copy request link**
+saves the current identifier, response type, language, selected fields and resource
+repository in a shared link. Filled account settings, including the app key, are
+included in shared links. Existing links using `radio` and `requestType` remain
+supported. During loading, the previous result stays visible; errors provide a
+retry action without discarding that result.
+
+The **Resources** menu groups index files, reference files and documentation into
+expandable branches. Its repository selector and the form language determine file
+URLs; changing these does not change server-side import or monitoring credentials.
+Header controls provide descriptions on hover and keyboard focus.
+
+Live content uses separate scoped styles (`launchpad/styles/live.css`), including
+compact gallery controls and theme-aware text, specification row backgrounds,
+group headings, borders and tooltips. Switching themes updates an already loaded
+Live datasheet without another request. The application theme is restricted
+to Launchpad's own controls so it cannot resize embedded Icecat Live buttons.
+
 ## Quick start on a virtual machine
 
 These instructions target a Linux server. Run all commands **in a terminal on the server**. You need Docker Engine with Compose v2, internet access, and Icecat credentials.
@@ -323,10 +355,18 @@ The current setup assumes **clients connect directly to Apache**. Before placing
 
 ## Website appearance
 
-The sun/moon button in the header switches between Ayu Light and Ayu Dark on
-Launchpad, Status and Uploads. The first visit follows the system color preference;
+The sun/moon button switches between **Ayu Light** and **Ayu Dark** on Launchpad,
+Status and Uploads. The first visit follows the system color preference;
 an explicit selection is saved in browser storage and shared between pages and tabs.
 If storage is unavailable, the switch still works for the current page.
+
+The separate **Old version** link opens `/classic/`: the original layout, controls
+and frontend scripts from `main`, with isolated styles and scripts. Status and
+Uploads also have classic pages. **New version** returns to the corresponding
+modern page, preserving request query parameters. Both versions use the same
+backend and shared files. The classic files are a compatibility snapshot; update
+API integrations there explicitly if backend contracts change. The modern Ayu
+theme preference does not affect the classic interface.
 
 The footer stays at the bottom of short pages and follows the content on longer
 pages without covering it. The copyright year is calculated in the browser.
