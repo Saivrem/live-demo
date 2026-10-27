@@ -1,6 +1,7 @@
 package biz.icecat.icedatav2.scheduler;
 
 import biz.icecat.icedatav2.service.DataUpdateService;
+import biz.icecat.icedatav2.service.impl.DailyIndexService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -17,6 +18,7 @@ import java.util.List;
 public class InitialDatabaseImport implements ApplicationRunner {
 
     private final List<DataUpdateService> dataUpdateServices;
+    private final DailyIndexService dailyIndexService;
 
     @Override
     public void run(ApplicationArguments arguments) {
@@ -30,5 +32,6 @@ public class InitialDatabaseImport implements ApplicationRunner {
             log.info("Initial import: {} processed {} records", service.getClass().getSimpleName(), processed);
         }
         log.info("Initial database import completed");
+        dailyIndexService.refreshIfDue();
     }
 }

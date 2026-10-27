@@ -66,3 +66,9 @@ uploads:
 
 share:
     directory: ${SHARE_DIRECTORY:share}
+
+daily-index:
+    access: ${ICECAT_ACCESS:free}
+    delay: ${DAILY_INDEX_DELAY:PT3H}
+    initial-delay: ${DAILY_INDEX_INITIAL_DELAY:PT1M}
+    timeout-millis: ${DAILY_INDEX_TIMEOUT_MILLIS:10000}

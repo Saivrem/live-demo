@@ -10,6 +10,7 @@ import biz.icecat.icedatav2.utils.CsvUtils;
 import biz.icecat.icedatav2.service.impl.SupplierDataUpdateService;
 import biz.icecat.icedatav2.repository.SupplierRepository;
 import biz.icecat.icedatav2.service.impl.SupplierCsvExportService;
+import biz.icecat.icedatav2.service.impl.DailyIndexService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -66,7 +67,7 @@ class SupplierCsvExportServiceTest {
         ReflectionTestUtils.setField(importer, "batchSize", 1000);
 
         if ("initial".equals(entryPoint)) {
-            new InitialDatabaseImport(List.of(importer)).run(new DefaultApplicationArguments("--initial-start"));
+            new InitialDatabaseImport(List.of(importer), mock(DailyIndexService.class)).run(new DefaultApplicationArguments("--initial-start"));
         } else {
             new DatabaseUpdateTask(List.of(importer)).updateDatabase();
         }

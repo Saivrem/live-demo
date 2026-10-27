@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Daily index status · Icecat Launchpad</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/styles/statistic.css">
+    <script src="/js/statistic.js" defer></script>
+</head>
+<body>
+<header><a href="/">← Launchpad</a><span>Icecat · Daily indexes</span></header>
+<main>
+    <h1>Daily index status</h1>
+    <p>Last known file dates from Icecat HEAD responses. All dates are in UTC.</p>
+    <div class="legend"><span class="badge today">Today</span><span class="badge yesterday">Yesterday</span>
+        <span class="badge old">Older</span><span class="badge unknown">Unknown / check overdue</span></div>
+    <div class="controls">
+        <label>Language <input id="languageFilter" type="search" placeholder="e.g. EN" maxlength="10"></label>
+        <label>Repository <select id="repositoryFilter"><option value="">All available</option></select></label>
+        <button id="refreshStatus" type="button">Reload saved status</button>
+    </div>
+    <p id="statusMessage" role="status" aria-live="polite">Loading…</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Language</th><th>Repository</th><th>Format</th><th>File status</th>
+            <th>Last modified (UTC)</th><th>Last checked (UTC)</th><th>Request result</th></tr></thead>
+        <tbody id="statusRows"></tbody>
+    </table></div>
+    <p class="note">This page reads the database only. Reloading does not send requests to Icecat.
+        Checks normally run every 3 hours. Free credentials monitor freexml; full credentials monitor freexml and level4.</p>
+</main>
+</body>
+</html>

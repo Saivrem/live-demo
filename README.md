@@ -244,7 +244,51 @@ API:
 - `GET /icedata/api/v2/uploads` — a list containing `name`, `url`, and `size`.
 - The address in `url` downloads the file.
 
-Old files in `launchpad/uploads/` are not migrated automatically. Save any files you need before upgrading, then upload them through the new form. Old `/index.php?...` links redirect to the home page while preserving query parameters. The statistics page and Status button have been removed.
+Old files in `launchpad/uploads/` are not migrated automatically. Save any files you need before upgrading, then upload them through the new form. Old `/index.php?...` links redirect to the home page while preserving query parameters.
+
+## Daily index monitoring
+
+The **Status** button opens `/statistic/`. The page reads saved checks from
+`GET /icedata/api/v2/daily-indexes`; opening or reloading it does not query Icecat.
+A scheduler sends authenticated `HEAD` requests for `daily.index.xml.gz` and
+`daily.index.csv.gz` for each distinct language in the database. It saves one row
+per repository, language and format, updating rows without clearing the table.
+
+Set credential scope explicitly in `.env` (existing installations should add this):
+
+```dotenv
+ICECAT_ACCESS='free'
+DAILY_INDEX_DELAY='PT3H'
+```
+
+- `free` (default): check `freexml` only.
+- `full`: check both `freexml` and `level4`. Requires credentials with full access.
+
+This setting is separate from `ICECAT_REPO`, which chooses the source for reference
+imports. Switching back to `free` also hides previously saved `level4` rows from
+the API and page. Monitoring never guesses permission by probing `level4` in free mode.
+
+The delay is measured after each sweep, defaults to **3 hours**, and accepts ISO-8601
+durations (`PT2H` for 2 hours). Normal startup schedules the first check after one
+minute; `--initial-start` explicitly checks after the language and supplier imports.
+An empty language table postpones checks until a later sweep. Failed checks are not
+retried immediately. `DAILY_INDEX_INITIAL_DELAY` (default `PT1M`) and
+`DAILY_INDEX_TIMEOUT_MILLIS` (default `10000`, per connect/read operation) are optional.
+
+File colors follow the original dashboard's calendar-day rules in **UTC**:
+
+| Color | Last-Modified date |
+| --- | --- |
+| Green | Today |
+| Yellow | Yesterday |
+| Red | Earlier than yesterday |
+
+These are calendar days, not elapsed 24-hour windows. Missing, invalid or future
+timestamps have unknown freshness. HTTP and network errors are shown separately,
+including the last check time and HTTP status where available. Failed checks keep
+the previous file timestamp rather than substituting the current time. An overdue
+check is shown in grey so an old successful check cannot appear green indefinitely.
+On the status page, timestamps are always UTC.
 
 ## Fail2ban and HTTPS
 

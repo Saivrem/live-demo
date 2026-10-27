@@ -79,6 +79,7 @@ public class BaseIT {
         registry.add("spring.flyway.password", MYSQL::getPassword);
         registry.add("uploads.directory", () -> UPLOADS.toString());
         registry.add("uploads.cleanup-cron", () -> "-");
+        registry.add("daily-index.initial-delay", () -> "PT24H");
     }
 
     @Autowired

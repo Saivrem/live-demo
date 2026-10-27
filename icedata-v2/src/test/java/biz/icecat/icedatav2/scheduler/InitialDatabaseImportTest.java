@@ -1,6 +1,7 @@
 package biz.icecat.icedatav2.scheduler;
 
 import biz.icecat.icedatav2.service.DataUpdateService;
+import biz.icecat.icedatav2.service.impl.DailyIndexService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -17,12 +18,14 @@ class InitialDatabaseImportTest {
 
     private final DataUpdateService languages = mock(DataUpdateService.class);
     private final DataUpdateService suppliers = mock(DataUpdateService.class);
-    private final InitialDatabaseImport runner = new InitialDatabaseImport(List.of(languages, suppliers));
+    private final DailyIndexService dailyIndexes = mock(DailyIndexService.class);
+    private final InitialDatabaseImport runner = new InitialDatabaseImport(List.of(languages, suppliers), dailyIndexes);
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withPropertyValues("icedata-v2.batch-size=1000")
             .withBean("languages", DataUpdateService.class, () -> languages)
             .withBean("suppliers", DataUpdateService.class, () -> suppliers)
+            .withBean(DailyIndexService.class, () -> dailyIndexes)
             .withUserConfiguration(InitialDatabaseImport.class);
 
     @Test
@@ -46,6 +49,7 @@ class InitialDatabaseImportTest {
 
         verify(languages).update();
         verify(suppliers).update();
+        verify(dailyIndexes).refreshIfDue();
     }
 
     @Test
