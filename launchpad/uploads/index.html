@@ -5,16 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Uploads — Launchpad</title>
     <link rel="icon" href="/favicon.ico">
+    <script src="/js/theme.js?v=4"></script>
+    <link rel="stylesheet" href="/styles/theme.css?v=6">
 </head>
 <body>
-    <nav><a href="/">Launchpad</a></nav>
-    <main>
+    <nav class="site-header launchpad-ui"><a href="/" data-tooltip="Return to the product request form.">← Launchpad</a><span>Shared files</span><a href="/classic/uploads/" data-classic-version data-tooltip="Open the original site with its familiar layout and controls.">Old version</a>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme" data-tooltip="Switch between Ayu Light and Ayu Dark."><svg class="theme-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><svg class="theme-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button></nav>
+    <main class="uploads-main launchpad-ui">
         <h1>Shared files</h1>
         <p>Files are deleted every day at 00:00 UTC.</p>
         <button id="refreshUploads" type="button">Refresh</button>
         <p id="uploadsStatus" role="status" aria-live="polite"></p>
         <ul id="uploadsList"></ul>
     </main>
+<footer class="site-footer">
+    <div>© 2018-<span data-copyright-year></span> Copyright:
+        <a href="https://github.com/Saivrem/live-demo">Live Demo</a>. All Rights Reserved
+    </div>
+</footer>
     <script src="/js/uploads.js" defer></script>
 </body>
 </html>

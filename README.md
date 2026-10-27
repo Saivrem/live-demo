@@ -2,6 +2,38 @@
 
 A web interface for working with Icecat. Apache serves the pages, Java/Spring handles the API and file uploads, and MySQL stores reference data. Fail2ban blocks common scanners using Apache access logs. PHP is no longer required.
 
+## Using Launchpad
+
+Choose **Find by** (Brand + MPN, EAN / GTIN, or Icecat product ID), then choose a
+response type and language. Only the relevant identifier fields are shown.
+**Account settings** contains the Icecat username and optional JSON app key.
+
+- **JSON**: show the response on the page or open JSON in a new tab. Field selection
+  is optional; leave it empty for the complete response.
+- **XML / CSV**: choose Product XML, Meta XML or Product CSV and open it in a new tab.
+- **Icecat Live · full**: show the complete product datasheet.
+- **Icecat Live · selected blocks**: choose at least one block, such as gallery,
+  essential information or specifications.
+- **Icecat product page**: opens the product page when searching by product ID.
+
+Live modes also provide **Get embed code**, with a copy button. **Copy request link**
+saves the current identifier, response type, language, selected fields and resource
+repository in a shared link. Filled account settings, including the app key, are
+included in shared links. Existing links using `radio` and `requestType` remain
+supported. During loading, the previous result stays visible; errors provide a
+retry action without discarding that result.
+
+The **Resources** menu groups index files, reference files and documentation into
+expandable branches. Its repository selector and the form language determine file
+URLs; changing these does not change server-side import or monitoring credentials.
+Header controls provide descriptions on hover and keyboard focus.
+
+Live content uses separate scoped styles (`launchpad/styles/live.css`), including
+compact gallery controls and theme-aware text, specification row backgrounds,
+group headings, borders and tooltips. Switching themes updates an already loaded
+Live datasheet without another request. The application theme is restricted
+to Launchpad's own controls so it cannot resize embedded Icecat Live buttons.
+
 ## Quick start on a virtual machine
 
 These instructions target a Linux server. Run all commands **in a terminal on the server**. You need Docker Engine with Compose v2, internet access, and Icecat credentials.
@@ -320,6 +352,56 @@ Fail2ban manages separate nftables tables, `icedata_f2b_input` and `icedata_f2b_
 The current setup assumes **clients connect directly to Apache**. Before placing a CDN or another proxy in front, configure trusted proxy addresses, client IP handling, and a ban action appropriate for that topology. Incoming `X-Forwarded-For` headers are not trusted.
 
 **HTTPS is not configured yet.** The site serves HTTP on port 80. For your domain, configure a certificate and TLS in Apache, publish port 443, and allow it in your provider's network settings. Including port 443 in fail2ban rules does not enable HTTPS.
+
+## Frontend dependencies
+
+Both the modern and classic pages use jQuery **4.0.0** (full build, served locally)
+and Bootstrap **5.3.8** (CSS and bundle with Popper from jsDelivr, pinned with SRI).
+The classic layout and request controls are preserved while its dependencies are
+updated alongside the modern page. The classic page keeps its original JSONViewer.
+
+## Website appearance
+
+The sun/moon button switches between **Ayu Light** and **Ayu Dark** on Launchpad,
+Status and Uploads. The first visit follows the system color preference;
+an explicit selection is saved in browser storage and shared between pages and tabs.
+If storage is unavailable, the switch still works for the current page.
+
+The separate **Old version** link opens `/classic/`: the original layout, controls
+and frontend scripts from `main`, with isolated styles and scripts. Status and
+Uploads also have classic pages. **New version** returns to the corresponding
+modern page, preserving request query parameters. Both versions use the same
+backend and shared files. The classic files are a compatibility snapshot; update
+API integrations there explicitly if backend contracts change. The modern Ayu
+theme preference does not affect the classic interface.
+
+The footer stays at the bottom of short pages and follows the content on longer
+pages without covering it. The copyright year is calculated in the browser.
+Ayu palette attribution and its MIT license are included in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and packaged in the web image.
+
+## JSON response viewer
+
+The modern Launchpad uses a read-only inspector in `launchpad/js/json-inspector.js`
+with Ayu-aware styles in `launchpad/styles/json-inspector.css`. It uses browser
+APIs and adds no third-party dependencies. The classic page keeps JSONViewer.
+
+- **Tree / Raw** switches between a collapsible tree and formatted JSON. Open
+  branches are preserved when switching modes.
+- **Find a key or value** searches the complete displayed payload, including
+  collapsed branches, highlights matches and shows matching branches. Clear the
+  search to browse the full tree again.
+- Each row has **Value** (copies JSON, including string quotes) and **Path**
+  (copies a bracket-notation JSONPath such as `$["Gallery"][0]["Pic"]`). Actions
+  appear on hover or keyboard focus and remain visible on touch devices.
+- **Copy JSON** and **Download** export the entire displayed payload, even while
+  search is active. As before, an Icecat response's `data` member is displayed
+  when present; otherwise the entire response is used.
+- Branch contents render on demand, with up to 100 children per batch. **Show
+  next** reveals further items. The Raw view and exported JSON include all items.
+
+Response strings are inserted as text. Clipboard access falls back to the
+browser's copy command on HTTP; if copying is blocked, select text in Raw.
 
 ## Development tests
 
