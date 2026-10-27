@@ -162,9 +162,3 @@ h2 {
 .input-group input:disabled {
     opacity: 0.4;
 }
-
-#footer-id {
-    position: relative;
-    height: 5%;
-    opacity: 70%;
-}

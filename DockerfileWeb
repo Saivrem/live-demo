@@ -9,3 +9,4 @@ RUN mkdir -p /var/log/apache2
 COPY apache.conf /usr/local/apache2/conf/extra/launchpad.conf
 RUN printf '\nInclude conf/extra/launchpad.conf\n' >> /usr/local/apache2/conf/httpd.conf
 COPY launchpad/ /usr/local/apache2/htdocs/
+COPY THIRD_PARTY_NOTICES.md /usr/local/apache2/htdocs/THIRD_PARTY_NOTICES.md

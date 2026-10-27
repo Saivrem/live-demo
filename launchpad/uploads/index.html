@@ -5,16 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Uploads — Launchpad</title>
     <link rel="icon" href="/favicon.ico">
+    <script src="/js/theme.js"></script>
+    <link rel="stylesheet" href="/styles/theme.css">
 </head>
 <body>
-    <nav><a href="/">Launchpad</a></nav>
-    <main>
+    <nav class="site-header"><a href="/">← Launchpad</a><span>Shared files</span><button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch theme" title="Switch theme">
+                <span class="theme-sun" aria-hidden="true">☀︎</span><span class="theme-moon" aria-hidden="true">☾</span>
+            </button></nav>
+    <main class="uploads-main">
         <h1>Shared files</h1>
         <p>Files are deleted every day at 00:00 UTC.</p>
         <button id="refreshUploads" type="button">Refresh</button>
         <p id="uploadsStatus" role="status" aria-live="polite"></p>
         <ul id="uploadsList"></ul>
     </main>
+<footer class="site-footer">
+    <div>© 2018-<span data-copyright-year></span> Copyright:
+        <a href="https://github.com/Saivrem/live-demo">Live Demo</a>. All Rights Reserved
+    </div>
+</footer>
     <script src="/js/uploads.js" defer></script>
 </body>
 </html>

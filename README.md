@@ -321,6 +321,18 @@ The current setup assumes **clients connect directly to Apache**. Before placing
 
 **HTTPS is not configured yet.** The site serves HTTP on port 80. For your domain, configure a certificate and TLS in Apache, publish port 443, and allow it in your provider's network settings. Including port 443 in fail2ban rules does not enable HTTPS.
 
+## Website appearance
+
+The sun/moon button in the header switches between Ayu Light and Ayu Dark on
+Launchpad, Status and Uploads. The first visit follows the system color preference;
+an explicit selection is saved in browser storage and shared between pages and tabs.
+If storage is unavailable, the switch still works for the current page.
+
+The footer stays at the bottom of short pages and follows the content on longer
+pages without covering it. The copyright year is calculated in the browser.
+Ayu palette attribution and its MIT license are included in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and packaged in the web image.
+
 ## Development tests
 
 ### Java tests without starting the application stack
