@@ -505,10 +505,8 @@ window.onload = async function () {
                 link = protocol + dataDomain + getRepo() + "refs/" + ref;
                 appendMenuItem(ref);
             });
-            // TODO: Replace the former cron job with a scheduler that converts supplier XML to CSV,
-            // then restore this link once share/SuppliersList.csv is generated and served.
-            // link = "share/SuppliersList.csv";
-            // appendMenuItem("SuppliersList.csv");
+            link = "share/SuppliersList.csv";
+            appendMenuItem("SuppliersList.csv");
             link = protocol + dataDomain + getRepo() + lang + "/supplier_mapping.xml";
             appendMenuItem("supplier_mapping.xml");
         } else if (field === "indexDropdownBody") {

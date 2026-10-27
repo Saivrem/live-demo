@@ -63,3 +63,6 @@ uploads:
     directory: ${UPLOADS_DIRECTORY:uploads}
     cleanup-cron: "0 0 0 * * *"
     cleanup-zone: UTC
+
+share:
+    directory: ${SHARE_DIRECTORY:share}

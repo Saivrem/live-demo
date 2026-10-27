@@ -65,7 +65,7 @@ If `.env` already exists, `env_setup.sh` reports this and leaves it unchanged. O
 ### 4. Start the service
 
 ```bash
-bash assemble.sh
+bash assemble.sh --initial-start
 ```
 
 The first run downloads images and dependencies, builds Java, creates the database, and applies migrations. This can take several minutes. The script succeeds when the services are ready; after starting containers, it waits up to 180 seconds for readiness.
@@ -75,6 +75,7 @@ Available options:
 | Command | What it does |
 | --- | --- |
 | `bash assemble.sh` | Builds images and starts the stack |
+| `bash assemble.sh --initial-start` | Builds and starts the stack, importing reference data from Icecat at startup |
 | `bash assemble.sh -t` | Runs Java tests in Docker, then builds and starts the stack |
 | `bash assemble.sh -c` | Builds images, stops existing containers, and recreates them while preserving data |
 | `bash assemble.sh -t -c` | Runs tests, builds images, and recreates containers |
@@ -99,12 +100,41 @@ The list should show `database`, `java`, `launchpad`, and `fail2ban` running. Th
 
 Open **`http://SERVER_IP/`** in your browser, replacing `SERVER_IP` with the VM's actual address. Using `localhost` in a browser on your computer refers to your computer, not the server.
 
-**Reference data is initially empty in a new database.** Import runs daily at **10:00 UTC**, not at application startup. Wait for the next scheduled run, then check:
+**Use `--initial-start` to populate reference data immediately.** It runs the same
+language and supplier import services used by the daily **10:00 UTC** scheduler,
+after Flyway migrations. It requires valid Icecat credentials and network access.
+An import exception or a source producing no records fails application startup;
+check the Java logs and configuration before retrying. Existing records are updated
+by ID; this flag does not delete or recreate the database.
+
+Without the flag, a new database remains empty until the next scheduled import.
+Check import progress and look for `Initial database import completed` in the logs
+(the container health response alone does not confirm that import has finished):
 
 ```bash
 docker compose logs --tail=200 java
 curl -fsS http://127.0.0.1/icedata/api/v2/languages
 ```
+
+For subsequent deployments, run `bash assemble.sh` without `--initial-start`.
+The flag stays in the Java container command until it is recreated without it;
+restarting that container repeats the import. It is not an automatic first-run detector.
+The flag can be combined with `-t` and `-c`.
+
+To request the import directly through Compose:
+
+```bash
+INITIAL_START=true docker compose up -d --build --wait --wait-timeout 180
+```
+
+For a standalone Java artifact (with the database and environment configured):
+
+```bash
+java -jar icedata-v2/build/libs/icedata-v2-0.1.0-SNAPSHOT.jar --initial-start
+```
+
+Flyway migrations still run on every normal startup; `--initial-start` controls
+reference data import only. `--initial-start=false` explicitly disables it.
 
 Administrative API access requires the `ICEDATA_ADMIN` authority: this covers `/icedata/api/v2/admin` (including subpaths) and `POST /icedata/api/v2/suppliers`. Spring Security returns `403` without that authority. No users or login flow are configured, and no default user is generated. Administrative writes also require a valid CSRF token. Apache continues to return `404` for admin routes; the retired admin controller remains a `404` stub even after authorization. There is no manual import button. Public read endpoints and uploads remain available without authentication.
 
@@ -186,6 +216,21 @@ Within Compose, containers connect using `database:3306` and `java:8086`. Do not
 | `fail2ban-state` | Fail2ban state |
 
 Docker prefixes volume names with the project name. Normal restarts, rebuilds, and `assemble.sh -c` preserve volumes. Persistent volumes are not a substitute for backups.
+
+## Suppliers CSV
+
+`/share/SuppliersList.csv` is exported from the suppliers database immediately after
+supplier import completes, both with `--initial-start` and with the daily scheduler
+(10:00 UTC). The supplier import service calls the CSV exporter directly.
+No extra XML download is performed.
+The UTF-8 CSV columns are `supplier_id`, `supplier_name`, `is_sponsor`, `brand_logo`,
+ordered by supplier ID. CSV fields and column order are defined by `@CsvMapping`
+on the `@CsvRow` supplier entity; unannotated relationships are excluded. All data fields are enclosed in double quotes, with embedded quotes doubled.
+Commas, line breaks and whitespace are preserved; null values become quoted empty fields.
+The CSV becomes available after suppliers have been imported.
+Java writes to a persistent shared volume, mounted read-only by Apache at `/share/`.
+Publication is atomic; export failures leave the previous CSV available.
+Outside Docker, the output directory defaults to `share/` and can be set with `SHARE_DIRECTORY`.
 
 ## File uploads
 

@@ -30,6 +30,7 @@ services:
     build:
       dockerfile: DockerfileJava
       context: .
+    command: ["--initial-start=${INITIAL_START:-false}"]
     container_name: "icedata-v2-java"
     restart: always
     logging:
@@ -43,6 +44,7 @@ services:
       - "127.0.0.1:8086:8086"
     environment:
       UPLOADS_DIRECTORY: /var/lib/icedata/uploads
+      SHARE_DIRECTORY: /var/lib/icedata/share
       DB_HOST: database
       DB_PORT: 3306
       JAVA_HOST: http://java
@@ -51,6 +53,7 @@ services:
       ICEDATA_V2_UPDATE_ZONE: UTC
     volumes:
       - icedata-v2-uploads-volume:/var/lib/icedata/uploads
+      - icedata-v2-share-volume:/var/lib/icedata/share
     depends_on:
       database:
         condition: service_healthy
@@ -76,6 +79,7 @@ services:
       - "80:80"
     volumes:
       - apache-logs:/var/log/apache2
+      - icedata-v2-share-volume:/usr/local/apache2/htdocs/share:ro
     depends_on:
       java:
         condition: service_healthy
@@ -112,3 +116,4 @@ volumes:
   fail2ban-state:
   icedata-v2-mysql-volume:
   icedata-v2-uploads-volume:
+  icedata-v2-share-volume:

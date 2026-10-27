@@ -19,7 +19,7 @@ with tempfile.TemporaryDirectory(prefix='icedata-stack-') as temporary:
         if name=='database':
             service['environment'].update(MYSQL_DATABASE=values['DB_SCHEMA'],MYSQL_USER=values['DB_USER'],MYSQL_PASSWORD=values['DB_PASS'])
         if name=='java':
-            service['environment'].update(UPLOADS_DIRECTORY='/var/lib/icedata/uploads',ICEDATA_V2_CRON='-',UPLOADS_CLEANUP_CRON='-',ICEDATA_V2_UPDATE_ZONE='UTC')
+            service['environment'].update(SHARE_DIRECTORY='/var/lib/icedata/share',UPLOADS_DIRECTORY='/var/lib/icedata/uploads',ICEDATA_V2_CRON='-',UPLOADS_CLEANUP_CRON='-',ICEDATA_V2_UPDATE_ZONE='UTC')
         if name in ['java','launchpad','fail2ban']:
             service['image']={'java':'codex-live-demo-java-check','launchpad':'codex-live-demo-apache-check','fail2ban':'codex-live-demo-fail2ban-check'}[name]
         for port in service.get('ports',[]):

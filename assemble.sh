@@ -4,14 +4,16 @@ set -euo pipefail
 project_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 recreate_containers=false
 run_tests=false
+initial_start=false
 
 usage() {
     cat <<'USAGE'
-Usage: assemble.sh [-c] [-t]
+Usage: assemble.sh [-c] [-t] [--initial-start]
 
 Build images and start the Compose stack.
   -c, --recreate  Stop existing containers before starting; preserve all volumes.
   -t, --test      Run Java tests in Docker before starting the stack.
+  --initial-start Import reference data from Icecat at application startup.
   -h, --help      Show this help.
 USAGE
 }
@@ -20,6 +22,7 @@ for argument in "$@"; do
     case "$argument" in
         -c|--recreate) recreate_containers=true ;;
         -t|--test) run_tests=true ;;
+        --initial-start) initial_start=true ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown argument: $argument" >&2; usage >&2; exit 2 ;;
     esac
@@ -55,4 +58,4 @@ if [[ "$recreate_containers" == true ]]; then
     docker compose down
 fi
 
-docker compose up -d --wait --wait-timeout 180
+INITIAL_START="$initial_start" docker compose up -d --wait --wait-timeout 180

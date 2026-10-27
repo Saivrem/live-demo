@@ -16,14 +16,16 @@ public class SupplierDataUpdateService extends DataUpdateService {
 
     private final SupplierRepository repository;
     private final SupplierConverter converter;
+    private final SupplierCsvExportService csvExportService;
 
     @Value("${files.suppliers-list}")
     private String suppliersListFile;
 
-    public SupplierDataUpdateService(ApplicationProperties properties, SupplierRepository repository, SupplierConverter converter) {
+    public SupplierDataUpdateService(ApplicationProperties properties, SupplierRepository repository, SupplierConverter converter, SupplierCsvExportService csvExportService) {
         super(properties);
         this.repository = repository;
         this.converter = converter;
+        this.csvExportService = csvExportService;
     }
 
     @Override
@@ -33,6 +35,14 @@ public class SupplierDataUpdateService extends DataUpdateService {
                 (suppliers -> repository.saveAll(converter.domainsListToListOfEntities(suppliers)))
         );
 
-        return processFile(handler, suppliersListFile, "suppliers_list.xml");
+        int processed = processFile(handler, suppliersListFile, "suppliers_list.xml");
+        if (processed > 0) {
+            try {
+                csvExportService.export();
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Could not export suppliers CSV", exception);
+            }
+        }
+        return processed;
     }
 }

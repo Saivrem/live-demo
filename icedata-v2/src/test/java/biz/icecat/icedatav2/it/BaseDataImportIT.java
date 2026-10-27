@@ -67,6 +67,7 @@ public abstract class BaseDataImportIT extends BaseIT {
         registry.add("icedata-v2.icecat-repo", () -> "test/");
         registry.add("icedata-v2.batch-size", () -> "2");
         registry.add("icedata-v2.temp-directory", () -> DOWNLOAD_DIRECTORY.toString());
+        registry.add("share.directory", () -> DOWNLOAD_DIRECTORY.resolve("share").toString());
     }
 
     @Autowired

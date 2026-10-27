@@ -51,3 +51,5 @@ out/
 icedata-v2/uploads/
 
 __pycache__/
+
+icedata-v2/share/
