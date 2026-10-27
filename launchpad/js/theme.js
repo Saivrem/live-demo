@@ -2,7 +2,7 @@
     const storageKey = 'launchpad-theme';
     const root = document.documentElement;
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-    const themeNames = { light: 'Ayu Light', dark: 'Ayu Dark' };
+    const themeNames = {light: 'Ayu Light', dark: 'Ayu Dark'};
     let preference = null;
     try {
         preference = localStorage.getItem(storageKey);
@@ -43,11 +43,13 @@
         tooltip.hidden = true;
         document.body.append(tooltip);
         let tooltipTarget;
+
         function hideTooltip() {
             tooltip.hidden = true;
             if (tooltipTarget) tooltipTarget.removeAttribute('aria-describedby');
             tooltipTarget = null;
         }
+
         function showTooltip(target) {
             hideTooltip();
             tooltipTarget = target;
@@ -61,6 +63,7 @@
             tooltip.style.left = left + 'px';
             tooltip.style.top = (below + tooltip.offsetHeight < window.innerHeight - 8 ? below : Math.max(8, bounds.top - tooltip.offsetHeight - 10)) + 'px';
         }
+
         document.querySelectorAll('.site-header [data-tooltip]').forEach(target => {
             target.addEventListener('pointerenter', () => showTooltip(target));
             target.addEventListener('pointerleave', hideTooltip);
@@ -70,7 +73,9 @@
         });
         window.addEventListener('resize', hideTooltip);
         document.addEventListener('scroll', hideTooltip, true);
-        document.addEventListener('keydown', event => { if (event.key === 'Escape') hideTooltip(); });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') hideTooltip();
+        });
         document.querySelectorAll('[data-copyright-year]').forEach(element => {
             element.textContent = new Date().getFullYear();
         });

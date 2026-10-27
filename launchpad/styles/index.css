@@ -93,3 +93,14 @@ body .launchpad-ui .resource-links a { white-space: normal; overflow-wrap: anywh
     .identifier-fields, .response-fields, .asset-options { grid-template-columns: minmax(0, 1fr); }
     .request-panel { padding: 16px; }
 }
+
+/* Validation belongs to the relevant control, and result context belongs to the sent request. */
+.field-error { display: block; color: var(--ayu-danger); font-size: 12px; font-weight: 400; line-height: 1.5; margin-top: 5px; }
+.field-error[hidden] { display: none; }
+body .launchpad-ui [aria-invalid="true"] { border-color: var(--ayu-danger) !important; }
+.result-request-details { display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 0; padding: 14px 24px; border-bottom: 1px solid var(--ayu-border); background: var(--ayu-raised); }
+.result-request-details[hidden] { display: none; }
+.result-request-details > div { min-width: 0; max-width: 100%; }
+.result-request-details dt { color: var(--ayu-muted); font-size: 11px; font-weight: 500; margin-bottom: 3px; }
+.result-request-details dd { color: var(--ayu-text); font-size: 13px; margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .result-request-details { padding: 14px; gap: 10px 22px; } }

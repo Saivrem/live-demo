@@ -25,7 +25,7 @@ if (uploadForm) {
         submit.disabled = true;
         status.textContent = 'Uploading…';
         try {
-            const response = await fetch(uploadsApi, { method: 'POST', body: new FormData(uploadForm) });
+            const response = await fetch(uploadsApi, {method: 'POST', body: new FormData(uploadForm)});
             if (!response.ok) throw new Error(await uploadError(response));
             const uploaded = await response.json();
             status.replaceChildren(document.createTextNode(`Uploaded ${uploaded.length} file(s). `));
@@ -48,7 +48,7 @@ async function loadUploads() {
     if (!list) return;
     status.textContent = 'Loading…';
     try {
-        const response = await fetch(uploadsApi, { cache: 'no-store' });
+        const response = await fetch(uploadsApi, {cache: 'no-store'});
         if (!response.ok) throw new Error(await uploadError(response));
         const uploads = await response.json();
         list.replaceChildren();

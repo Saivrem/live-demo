@@ -27,7 +27,9 @@ class JsonInspector {
             }, 150);
         });
         this.collapseButton = this.button('Collapse', () => {
-            this.tree.querySelectorAll('details').forEach(detail => { detail.open = false; });
+            this.tree.querySelectorAll('details').forEach(detail => {
+                detail.open = false;
+            });
         });
         toolbar.append(modes, this.search, this.collapseButton,
             this.button('Copy JSON', () => this.copy(this.raw, 'JSON copied.')),
@@ -45,7 +47,9 @@ class JsonInspector {
         this.setMode('tree');
     }
 
-    getContainer() { return this.container; }
+    getContainer() {
+        return this.container;
+    }
 
     element(tag, className, text) {
         const element = document.createElement(tag);
@@ -63,7 +67,7 @@ class JsonInspector {
 
     createNode(key, value, path, depth) {
         const branch = value !== null && typeof value === 'object';
-        const node = { key, value, path, depth, branch, children: [], ownMatch: false, match: true };
+        const node = {key, value, path, depth, branch, children: [], ownMatch: false, match: true};
         if (branch) {
             node.children = Object.entries(value).map(([name, child]) => this.createNode(
                 name, child, path + (Array.isArray(value) ? '[' + name + ']' : '[' + JSON.stringify(name) + ']'), depth + 1));
@@ -86,7 +90,9 @@ class JsonInspector {
         node.ownMatch = Boolean(this.query) && (node.key.toLowerCase().includes(this.query)
             || (!node.branch && String(node.value).toLowerCase().includes(this.query)));
         let count = node.ownMatch ? 1 : 0;
-        node.children.forEach(child => { count += this.findMatches(child); });
+        node.children.forEach(child => {
+            count += this.findMatches(child);
+        });
         node.match = !this.query || count > 0;
         return count;
     }
@@ -158,7 +164,9 @@ class JsonInspector {
                 showBatch();
                 detail.append(children);
             };
-            detail.addEventListener('toggle', () => { if (detail.open) load(); });
+            detail.addEventListener('toggle', () => {
+                if (detail.open) load();
+            });
             detail.open = this.query ? (!inheritedMatch && !node.ownMatch) : node.depth < 1;
             if (detail.open) load();
             item.append(detail, actions);
@@ -191,7 +199,7 @@ class JsonInspector {
     }
 
     download() {
-        const url = URL.createObjectURL(new Blob([this.raw + '\n'], { type: 'application/json;charset=utf-8' }));
+        const url = URL.createObjectURL(new Blob([this.raw + '\n'], {type: 'application/json;charset=utf-8'}));
         const link = this.element('a', '');
         link.href = url;
         link.download = 'icecat-response.json';

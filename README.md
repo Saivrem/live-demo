@@ -355,10 +355,25 @@ The current setup assumes **clients connect directly to Apache**. Before placing
 
 ## Frontend dependencies
 
-Both the modern and classic pages use jQuery **4.0.0** (full build, served locally)
-and Bootstrap **5.3.8** (CSS and bundle with Popper from jsDelivr, pinned with SRI).
-The classic layout and request controls are preserved while its dependencies are
-updated alongside the modern page. The classic page keeps its original JSONViewer.
+The modern and classic pages use Bootstrap **5.3.8** (CSS and bundle with
+Popper from jsDelivr, pinned with SRI). The modern request UI uses native browser
+APIs and ES modules; no bundler or jQuery is required. The classic page keeps
+jQuery **4.0.0** (full build, served locally) and its original JSONViewer.
+
+### Request UI modules
+
+`launchpad/js/logic.js` is the page controller. Modules under `launchpad/js/request/`
+separate form state and validation (`form.js`, `state.js`), request and shared URLs
+(`links.js`), JSON/language loading (`api.js`), resource navigation (`resources.js`),
+the existing Live renderer and embed snippets (`live.js`, `embed.js`), and clipboard
+access (`clipboard.js`). Serve the frontend over HTTP; native modules do not run
+by opening `index.html` directly with a `file:` URL.
+
+The selected response is submitted with the primary button or Enter in a text or
+password field. Missing fields have inline descriptions and keyboard focus moves
+to the first error. A successful embedded response includes a product, language
+and format summary captured when the request was submitted. Editing the form or
+a subsequent failed request does not change the context of the displayed result.
 
 ## Website appearance
 
@@ -404,6 +419,19 @@ Response strings are inserted as text. Clipboard access falls back to the
 browser's copy command on HTTP; if copying is blocked, select text in Raw.
 
 ## Development tests
+
+### Frontend tests without Docker
+
+With Node.js 24, run from the repository root:
+
+```bash
+node --test scripts/test-frontend.mjs
+```
+
+These tests cover active-field validation, reserved characters in request URLs,
+shared-link restoration, content aliases, request summaries, API errors and
+executable Live embed snippets. They do not call Icecat or require the backend.
+
 
 ### Java tests without starting the application stack
 

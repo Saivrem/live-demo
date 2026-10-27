@@ -17,7 +17,7 @@ function renderStatus() {
         && (!repositoryFilter.value || entry.repository === repositoryFilter.value));
     for (const entry of selected) {
         const row = document.createElement('tr');
-        const states = { TODAY: ['Today', 'today'], YESTERDAY: ['Yesterday', 'yesterday'], OLD: ['Older', 'old'] };
+        const states = {TODAY: ['Today', 'today'], YESTERDAY: ['Yesterday', 'yesterday'], OLD: ['Older', 'old']};
         let [label, color] = states[entry.freshness] || ['Unknown', 'unknown'];
         if (entry.result !== 'OK') [label, color] = ['Check failed', 'old'];
         if (entry.checkOverdue) [label, color] = ['Check overdue', 'unknown'];
@@ -42,7 +42,7 @@ async function loadStatus() {
     refresh.disabled = true;
     message.textContent = 'Loading saved status…';
     try {
-        const response = await fetch('/icedata/api/v2/daily-indexes', { cache: 'no-store' });
+        const response = await fetch('/icedata/api/v2/daily-indexes', {cache: 'no-store'});
         if (!response.ok) throw new Error(`Could not load status (HTTP ${response.status}).`);
         const data = await response.json();
         if (!Array.isArray(data)) throw new Error('Unexpected status response.');

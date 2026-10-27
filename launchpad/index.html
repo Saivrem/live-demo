@@ -6,15 +6,17 @@
     <title>Icecat Launchpad</title>
     <link rel="icon" href="/favicon.ico">
     <script src="/js/theme.js?v=4"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="/styles/json-inspector.css?v=1">
     <link rel="stylesheet" href="/styles/theme.css?v=6">
-    <link rel="stylesheet" href="/styles/index.css?v=2">
+    <link rel="stylesheet" href="/styles/index.css?v=3">
     <link rel="stylesheet" href="/styles/live.css?v=6">
-    <script src="/js/jquery-4.0.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"
+            defer></script>
     <script src="/js/json-inspector.js?v=1" defer></script>
-    <script src="/js/logic.js?v=6" defer></script>
+    <script type="module" src="/js/logic.js?v=7"></script>
 </head>
 <body class="launchpad-page">
 <header class="site-header launchpad-header launchpad-ui">
@@ -24,71 +26,154 @@
             <summary data-tooltip="Browse index files, reference lists and Icecat documentation.">Resources</summary>
             <div class="resources-panel">
                 <label class="resource-repository" for="resourceRepository">Repository
-                    <select id="resourceRepository" aria-label="Repository"><option value="freexml/">Open · freexml</option><option value="level4/">Full · level4</option></select>
+                    <select id="resourceRepository" aria-label="Repository">
+                        <option value="freexml/">Open · freexml</option>
+                        <option value="level4/">Full · level4</option>
+                    </select>
                 </label>
                 <p class="resources-context">File links use the language selected in the form.</p>
-                <details id="indexDropdown"><summary aria-label="Index files">Index files</summary><div id="indexDropdownBody" class="resource-links"></div></details>
-                <details id="refDropdown"><summary aria-label="Reference files">Reference files</summary><div id="refDropdownBody" class="resource-links"></div></details>
-                <details id="documents"><summary aria-label="Documentation">Documentation</summary><div id="documentsBody" class="resource-links"></div></details>
+                <details id="indexDropdown">
+                    <summary aria-label="Index files">Index files</summary>
+                    <div id="indexDropdownBody" class="resource-links"></div>
+                </details>
+                <details id="refDropdown">
+                    <summary aria-label="Reference files">Reference files</summary>
+                    <div id="refDropdownBody" class="resource-links"></div>
+                </details>
+                <details id="documents">
+                    <summary aria-label="Documentation">Documentation</summary>
+                    <div id="documentsBody" class="resource-links"></div>
+                </details>
             </div>
         </details>
         <a href="/statistic/" data-tooltip="See when daily index files were last updated and checked.">Status</a>
         <a href="/uploads/" data-tooltip="Browse and download files shared through this demo.">Uploads</a>
-        <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#shareModal" data-tooltip="Upload public files for temporary sharing. Files are deleted daily at 00:00 UTC.">Share files</button>
-        <a href="/classic/" data-classic-version data-tooltip="Open the original site with its familiar layout and controls.">Old version</a>
-        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme" data-tooltip="Switch between Ayu Light and Ayu Dark."><svg class="theme-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><svg class="theme-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+        <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#shareModal"
+                data-tooltip="Upload public files for temporary sharing. Files are deleted daily at 00:00 UTC.">Share
+            files
+        </button>
+        <a href="/classic/" data-classic-version
+           data-tooltip="Open the original site with its familiar layout and controls.">Old version</a>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme"
+                data-tooltip="Switch between Ayu Light and Ayu Dark.">
+            <svg class="theme-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg class="theme-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true" focusable="false">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        </button>
     </nav>
 </header>
 <main class="launchpad-main">
-    <div class="page-introduction launchpad-ui"><h1>Explore product data</h1><p>Choose a product and the response you want to inspect.</p></div>
+    <div class="page-introduction launchpad-ui"><h1>Explore product data</h1>
+        <p>Choose a product and the response you want to inspect.</p></div>
     <form id="requestForm" class="request-panel launchpad-ui" novalidate>
         <div class="request-grid">
             <section class="request-section" aria-labelledby="productHeading">
                 <h2 id="productHeading"><span class="step-number">1</span> Find a product</h2>
                 <label class="field" for="identifierType">Find by
-                    <select id="identifierType"><option value="brandMpn">Brand + MPN</option><option value="ean">EAN / GTIN</option><option value="id">Icecat product ID</option></select>
+                    <select id="identifierType">
+                        <option value="brandMpn">Brand + MPN</option>
+                        <option value="ean">EAN / GTIN</option>
+                        <option value="id">Icecat product ID</option>
+                    </select>
                 </label>
                 <div class="identifier-fields">
-                    <label class="field" data-identifier-field="brand" for="brand">Brand<input type="text" id="brand" name="brand" value="Dell" placeholder="e.g. Dell" autocomplete="off"></label>
-                    <label class="field" data-identifier-field="mpn" for="mpn">Manufacturer part number<input type="text" id="mpn" name="mpn" value="5587-9709" placeholder="e.g. 5587-9709" autocomplete="off"></label>
-                    <label class="field" data-identifier-field="ean" for="ean" hidden>EAN / GTIN<input type="text" id="ean" name="ean" value="5397184119709" placeholder="Enter EAN or GTIN" inputmode="numeric" autocomplete="off"></label>
-                    <label class="field" data-identifier-field="productId" for="productId" hidden>Icecat product ID<input type="text" id="productId" name="productId" value="56195846" placeholder="Enter product ID" inputmode="numeric" autocomplete="off"></label>
+                    <label class="field" data-identifier-field="brand" for="brand">Brand<input type="text" id="brand"
+                                                                                               name="brand" value="Dell"
+                                                                                               placeholder="e.g. Dell"
+                                                                                               autocomplete="off"></label>
+                    <label class="field" data-identifier-field="mpn" for="mpn">Manufacturer part number<input
+                            type="text" id="mpn" name="mpn" value="5587-9709" placeholder="e.g. 5587-9709"
+                            autocomplete="off"></label>
+                    <label class="field" data-identifier-field="ean" for="ean" hidden>EAN / GTIN<input type="text"
+                                                                                                       id="ean"
+                                                                                                       name="ean"
+                                                                                                       value="5397184119709"
+                                                                                                       placeholder="Enter EAN or GTIN"
+                                                                                                       inputmode="numeric"
+                                                                                                       autocomplete="off"></label>
+                    <label class="field" data-identifier-field="productId" for="productId" hidden>Icecat product
+                        ID<input type="text" id="productId" name="productId" value="56195846"
+                                 placeholder="Enter product ID" inputmode="numeric" autocomplete="off"></label>
                 </div>
-                <details class="advanced-settings" id="accountSettings"><summary>Account settings <span>Username &amp; app key</span></summary>
-                    <label class="field" for="username">Username<input type="text" id="username" name="username" value="openicecat-live" autocomplete="username"></label>
-                    <label class="field" for="appkey">App key <span class="optional-label">optional · JSON</span><input type="password" id="appkey" name="appkey" autocomplete="off" placeholder="Only if required by your account"></label>
+                <details class="advanced-settings" id="accountSettings">
+                    <summary>Account settings <span>Username &amp; app key</span></summary>
+                    <label class="field" for="username">Username<input type="text" id="username" name="username"
+                                                                       value="openicecat-live" autocomplete="username"></label>
+                    <label class="field" for="appkey">App key <span class="optional-label">optional · JSON</span><input
+                            type="password" id="appkey" name="appkey" autocomplete="off"
+                            placeholder="Only if required by your account"></label>
                     <p class="field-help">A filled app key is included in request links you copy.</p>
                 </details>
             </section>
             <section class="request-section" aria-labelledby="responseHeading">
                 <h2 id="responseHeading"><span class="step-number">2</span> Choose a response</h2>
                 <div class="response-fields">
-                    <label class="field" for="requestFormat">Response type<select id="requestFormat"><option value="json">JSON</option><option value="xml">XML / CSV</option><option value="liveFull">Icecat Live · full</option><option value="liveGranular">Icecat Live · selected blocks</option><option value="fo">Icecat product page</option></select></label>
-                    <label class="field" for="lang">Language<select id="lang" name="lang"><option value="EN">English</option></select></label>
+                    <label class="field" for="requestFormat">Response type<select id="requestFormat">
+                        <option value="json">JSON</option>
+                        <option value="xml">XML / CSV</option>
+                        <option value="liveFull">Icecat Live · full</option>
+                        <option value="liveGranular">Icecat Live · selected blocks</option>
+                        <option value="fo">Icecat product page</option>
+                    </select></label>
+                    <label class="field" for="lang">Language<select id="lang" name="lang">
+                        <option value="EN">English</option>
+                    </select></label>
                 </div>
                 <p id="languageStatus" class="field-help" role="status" aria-live="polite">Loading languages…</p>
-                <label class="field" id="xmlOutputField" for="output" hidden>Output format<select id="output"><option value="productxml">Product XML</option><option value="metaxml">Meta XML</option><option value="productcsv">Product CSV</option></select></label>
+                <label class="field" id="xmlOutputField" for="output" hidden>Output format<select id="output">
+                    <option value="productxml">Product XML</option>
+                    <option value="metaxml">Meta XML</option>
+                    <option value="productcsv">Product CSV</option>
+                </select></label>
                 <p id="formatHelp" class="field-help">View JSON here, or open the response in a new tab.</p>
-                <details class="content-settings" id="contentSettings"><summary id="contentSettingsLabel">Choose JSON fields <span>optional</span></summary>
+                <details class="content-settings" id="contentSettings">
+                    <summary id="contentSettingsLabel">Choose JSON fields <span>optional</span></summary>
                     <p class="field-help" id="contentHelp">Leave all unchecked to request the full JSON response.</p>
-                    <label class="select-all"><input type="checkbox" id="selectAllCheck"> Select all available fields</label>
+                    <label class="select-all"><input type="checkbox" id="selectAllCheck"> Select all available
+                        fields</label>
                     <div class="asset-options">
-                            <label class="asset-option" data-asset="title"><input type="checkbox" id="titleCheck">Title</label>
-                            <label class="asset-option" data-asset="gallery"><input type="checkbox" id="galleryCheck">Gallery</label>
-                            <label class="asset-option" data-asset="generalinfo"><input type="checkbox" id="generalinfoCheck">General information</label>
-                            <label class="asset-option" data-asset="essentialinfo"><input type="checkbox" id="essentialinfoCheck">Essential information</label>
-                            <label class="asset-option" data-asset="featuregroups"><input type="checkbox" id="featuregroupsCheck">Specifications</label>
-                            <label class="asset-option" data-asset="marketingtext"><input type="checkbox" id="marketingtextCheck">Description</label>
-                            <label class="asset-option" data-asset="bulletpoints"><input type="checkbox" id="bulletpointsCheck">Bullet points</label>
-                            <label class="asset-option" data-asset="manuals"><input type="checkbox" id="manualsCheck">Documents</label>
-                            <label class="asset-option" data-asset="featurelogos"><input type="checkbox" id="featurelogosCheck">Feature logos</label>
-                            <label class="asset-option" data-asset="productstory"><input type="checkbox" id="productstoryCheck">Product story</label>
-                            <label class="asset-option" data-asset="image"><input type="checkbox" id="imageCheck">Main image</label>
-                            <label class="asset-option" data-asset="related"><input type="checkbox" id="relatedCheck">Related products</label>
-                            <label class="asset-option" data-asset="reasonstobuy"><input type="checkbox" id="reasonstobuyCheck">Reasons to buy</label>
-                            <label class="asset-option" data-asset="videos"><input type="checkbox" id="videosCheck">Videos</label>
-                            <label class="asset-option" data-asset="tours3d"><input type="checkbox" id="tours3dCheck">3D tours</label>
-                            <label class="asset-option" data-asset="reviews"><input type="checkbox" id="reviewsCheck">Reviews</label>
+                        <label class="asset-option" data-asset="title"><input type="checkbox"
+                                                                              id="titleCheck">Title</label>
+                        <label class="asset-option" data-asset="gallery"><input type="checkbox" id="galleryCheck">Gallery</label>
+                        <label class="asset-option" data-asset="generalinfo"><input type="checkbox"
+                                                                                    id="generalinfoCheck">General
+                            information</label>
+                        <label class="asset-option" data-asset="essentialinfo"><input type="checkbox"
+                                                                                      id="essentialinfoCheck">Essential
+                            information</label>
+                        <label class="asset-option" data-asset="featuregroups"><input type="checkbox"
+                                                                                      id="featuregroupsCheck">Specifications</label>
+                        <label class="asset-option" data-asset="marketingtext"><input type="checkbox"
+                                                                                      id="marketingtextCheck">Description</label>
+                        <label class="asset-option" data-asset="bulletpoints"><input type="checkbox"
+                                                                                     id="bulletpointsCheck">Bullet
+                            points</label>
+                        <label class="asset-option" data-asset="manuals"><input type="checkbox" id="manualsCheck">Documents</label>
+                        <label class="asset-option" data-asset="featurelogos"><input type="checkbox"
+                                                                                     id="featurelogosCheck">Feature
+                            logos</label>
+                        <label class="asset-option" data-asset="productstory"><input type="checkbox"
+                                                                                     id="productstoryCheck">Product
+                            story</label>
+                        <label class="asset-option" data-asset="image"><input type="checkbox" id="imageCheck">Main image</label>
+                        <label class="asset-option" data-asset="related"><input type="checkbox" id="relatedCheck">Related
+                            products</label>
+                        <label class="asset-option" data-asset="reasonstobuy"><input type="checkbox"
+                                                                                     id="reasonstobuyCheck">Reasons to
+                            buy</label>
+                        <label class="asset-option" data-asset="videos"><input type="checkbox"
+                                                                               id="videosCheck">Videos</label>
+                        <label class="asset-option" data-asset="tours3d"><input type="checkbox" id="tours3dCheck">3D
+                            tours</label>
+                        <label class="asset-option" data-asset="reviews"><input type="checkbox" id="reviewsCheck">Reviews</label>
                     </div>
                 </details>
             </section>
@@ -100,14 +185,21 @@
             <button class="btn" id="copyLinkButton" type="button">Copy request link</button>
             <button class="btn reset-request" id="clear" type="button">Reset</button>
         </div>
-        <div id="popUp" class="request-feedback" role="status" aria-live="polite" hidden><span id="popUpContent"></span><button type="button" class="btn" id="retryRequest" hidden>Retry</button></div>
+        <div id="popUp" class="request-feedback" role="status" aria-live="polite" hidden><span id="popUpContent"></span>
+            <button type="button" class="btn" id="retryRequest" hidden>Retry</button>
+        </div>
     </form>
     <section class="result-panel" aria-labelledby="resultHeading">
-        <div class="result-heading launchpad-ui"><h2 id="resultHeading">Result</h2><span id="resultSummary">Your response will appear here</span></div>
-        <div id="content" class="request-result"><div class="result-empty"><span class="empty-brackets" aria-hidden="true">{ }</span><h3>Ready when you are</h3><p>Start with the sample product above, or enter your own identifiers.</p></div></div>
+        <div class="result-heading launchpad-ui"><h2 id="resultHeading">Result</h2><span id="resultSummary">Your response will appear here</span>
+        </div>
+        <dl id="resultRequestDetails" class="result-request-details" hidden></dl>
+        <div id="content" class="request-result">
+            <div class="result-empty"><span class="empty-brackets" aria-hidden="true">{ }</span>
+                <h3>Ready when you are</h3>
+                <p>Start with the sample product above, or enter your own identifiers.</p></div>
+        </div>
     </section>
 </main>
-<div id="copyBox" hidden></div>
 <template id="liveDiv">
     <div class="live-granular-grid">
         <div id="title" class="live-slot live-wide"></div>
@@ -172,7 +264,10 @@
         </div>
     </div>
 </div>
-<footer class="site-footer"><div>© 2018-<span data-copyright-year></span> Copyright: <a href="https://github.com/Saivrem">Denis Sheviakov</a>. All Rights Reserved · <a href="https://github.com/Saivrem/live-demo">Project on GitHub</a></div></footer>
+<footer class="site-footer">
+    <div>© 2018-<span data-copyright-year></span> Copyright: <a href="https://github.com/Saivrem">Denis Sheviakov</a>.
+        All Rights Reserved · <a href="https://github.com/Saivrem/live-demo">Project on GitHub</a></div>
+</footer>
 <script src="/js/uploads.js" defer></script>
 </body>
 </html>
