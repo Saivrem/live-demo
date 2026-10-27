@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {jsonResponseViews} from '../launchpad/js/json-inspector.js';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {requestSummary, validateRequest} from '../launchpad/js/request/state.js';
@@ -143,4 +144,25 @@ test('transport reports API errors and rejects invalid JSON instead of rendering
     await assert.rejects(fetchJson('https://example.test'), /invalid JSON response/);
     fetch.mock.mockImplementation(async () => new Response(JSON.stringify({data: {id: 1}})));
     assert.deepEqual(await fetchJson('https://example.test'), {data: {id: 1}});
+});
+
+
+test('JSON views retain the complete envelope and every valid falsy data value', () => {
+    for (const data of [null, false, 0, '', [], {Title: 'Product'}]) {
+        const response = {data, message: 'OK', metadata: {version: 2}};
+        const views = jsonResponseViews(response);
+        assert.equal(views.data, data);
+        assert.equal(views.full, response);
+        assert.equal(views.full.metadata.version, 2);
+    }
+});
+
+test('responses without a data member expose only the full response', () => {
+    for (const response of [null, false, 0, 'message', [], {message: 'No product', error: 'NOT_FOUND'}]) {
+        assert.deepEqual(Object.keys(jsonResponseViews(response)), ['full']);
+        assert.equal(jsonResponseViews(response).full, response);
+    }
+    const inherited = Object.create({data: 'inherited'});
+    inherited.message = 'Own fields only';
+    assert.deepEqual(Object.keys(jsonResponseViews(inherited)), ['full']);
 });

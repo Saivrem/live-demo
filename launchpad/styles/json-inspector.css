@@ -38,3 +38,14 @@ summary.json-row::before { content: '›'; position: absolute; left: 5px; color:
     .json-row { padding-right: 100px; }
     .json-row-actions { opacity: 1; }
 }
+
+.result-panel .json-toolbar { position: sticky; top: var(--result-heading-height, 80px); z-index: 10; background: var(--ayu-surface); padding-top: 10px; }
+.json-payload-label { display: flex; align-items: center; gap: 7px; color: var(--ayu-muted); font: 12px/1.4 system-ui, sans-serif; }
+.json-inspector .json-payload-select { min-width: 0; max-width: 100%; padding: 6px 8px; border: 1px solid var(--ayu-border); border-radius: 5px; background: var(--ayu-raised); color: var(--ayu-text); font: 13px/1.4 system-ui, sans-serif; }
+.json-payload-select:focus-visible { outline: 2px solid var(--ayu-focus); outline-offset: 2px; }
+.json-payload-help { color: var(--ayu-muted); font: 12px/1.5 system-ui, sans-serif; margin: 10px 0 0; }
+.result-panel-expanded .json-raw { max-height: none; }
+@media (max-width: 700px) {
+    .json-payload-label { flex-basis: 100%; }
+    .json-inspector .json-payload-select { font-size: 16px; flex: 1; }
+}

@@ -1,6 +1,15 @@
 /* Read-only JSON inspection for the modern Launchpad. No HTML from the response is interpreted. */
-class JsonInspector {
-    constructor(value) {
+export function jsonResponseViews(response) {
+    return response !== null && typeof response === 'object' && Object.hasOwn(response, 'data')
+        ? {data: response.data, full: response} : {full: response};
+}
+
+export class JsonInspector {
+    constructor(response) {
+        this.payloads = jsonResponseViews(response);
+        this.scope = Object.hasOwn(this.payloads, 'data') ? 'data' : 'full';
+        this.savedViews = new Map();
+        const value = this.payloads[this.scope];
         this.raw = JSON.stringify(value, null, 2);
         this.query = '';
         this.mode = 'tree';
@@ -31,7 +40,19 @@ class JsonInspector {
                 detail.open = false;
             });
         });
-        toolbar.append(modes, this.search, this.collapseButton,
+        const payloadLabel = this.element('label', 'json-payload-label', 'Payload');
+        this.payloadSelect = this.element('select', 'json-payload-select');
+        this.payloadSelect.setAttribute('aria-label', 'JSON payload');
+        Object.keys(this.payloads).forEach(scope => {
+            const option = this.element('option', '', scope === 'data' ? 'Product data (data)' : 'Full API response');
+            option.value = scope;
+            this.payloadSelect.append(option);
+        });
+        this.payloadSelect.value = this.scope;
+        this.payloadSelect.disabled = !Object.hasOwn(this.payloads, 'data');
+        this.payloadSelect.addEventListener('change', () => this.selectPayload(this.payloadSelect.value));
+        payloadLabel.append(this.payloadSelect);
+        toolbar.append(payloadLabel, modes, this.search, this.collapseButton,
             this.button('Copy JSON', () => this.copy(this.raw, 'JSON copied.')),
             this.button('Download', () => this.download()));
         this.status = this.element('p', 'json-status');
@@ -42,9 +63,38 @@ class JsonInspector {
         this.rawView.tabIndex = 0;
         this.rawView.setAttribute('aria-label', 'Raw JSON');
         this.rawView.textContent = this.raw;
-        this.container.append(toolbar, this.status, this.tree, this.rawView);
+        this.payloadHelp = this.element('p', 'json-payload-help');
+        this.container.append(toolbar, this.payloadHelp, this.status, this.tree, this.rawView);
+        this.updatePayloadHelp();
         this.render();
         this.setMode('tree');
+    }
+
+    selectPayload(scope) {
+        if (scope === this.scope || !Object.hasOwn(this.payloads, scope)) return;
+        clearTimeout(this.searchTimer);
+        this.savedViews.set(this.scope, {raw: this.raw, root: this.root, tree: this.tree,
+            treeStatus: this.treeStatus, query: this.query, rawScroll: this.rawView.scrollTop});
+        this.scope = scope;
+        const saved = this.savedViews.get(scope);
+        this.raw = saved ? saved.raw : JSON.stringify(this.payloads[scope], null, 2);
+        this.root = saved ? saved.root : this.createNode('$', this.payloads[scope], '$', 0);
+        const tree = saved ? saved.tree : this.element('div', 'json-tree');
+        this.tree.replaceWith(tree);
+        this.tree = tree;
+        this.query = this.search.value.trim().toLowerCase();
+        if (!saved || saved.query !== this.query) this.render();
+        else this.treeStatus = saved.treeStatus;
+        this.rawView.textContent = this.raw;
+        this.rawView.scrollTop = saved ? saved.rawScroll : 0;
+        this.setMode(this.mode);
+        this.updatePayloadHelp();
+    }
+
+    updatePayloadHelp() {
+        this.payloadHelp.textContent = this.scope === 'data'
+            ? 'Showing data. Copy, download and field paths use this payload.'
+            : 'Showing the full API response, including any metadata. Copy, download and field paths use this payload.';
     }
 
     getContainer() {
@@ -202,7 +252,7 @@ class JsonInspector {
         const url = URL.createObjectURL(new Blob([this.raw + '\n'], {type: 'application/json;charset=utf-8'}));
         const link = this.element('a', '');
         link.href = url;
-        link.download = 'icecat-response.json';
+        link.download = this.scope === 'data' ? 'icecat-data.json' : 'icecat-response.json';
         this.container.append(link);
         link.click();
         link.remove();

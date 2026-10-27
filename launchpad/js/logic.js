@@ -1,3 +1,5 @@
+import {JsonInspector} from './json-inspector.js';
+import {createResultPanel} from './request/result-panel.js';
 import {createRequestForm} from './request/form.js';
 import {formats, requestSummary} from './request/state.js';
 import {jsonUrl, liveAssets, liveProperties, productUrl, sharedRequest, shareUrl, xmlUrl} from './request/links.js';
@@ -9,6 +11,7 @@ import {copyText} from './request/clipboard.js';
 
 const form = createRequestForm(document.getElementById('requestForm'));
 const content = document.getElementById('content');
+const resultPanel = createResultPanel(document.getElementById('resultPanel'), form.element);
 const feedback = document.getElementById('popUp');
 const retry = document.getElementById('retryRequest');
 const live = createLiveRenderer(content, document.getElementById('liveDiv'));
@@ -44,28 +47,6 @@ function validRequest(state) {
     return false;
 }
 
-function showResult(node, state) {
-    content.replaceChildren(node);
-    document.getElementById('resultSummary').textContent = formats[state.format].name + ' response · ' + state.language;
-    const summary = requestSummary(state);
-    const details = document.getElementById('resultRequestDetails');
-    details.replaceChildren(...Object.entries(summary).map(([key, value]) => {
-        const item = document.createElement('div');
-        const term = document.createElement('dt');
-        term.textContent = {product: 'Product', language: 'Language', response: 'Response'}[key];
-        const description = document.createElement('dd');
-        description.textContent = value;
-        item.append(term, description);
-        return item;
-    }));
-    details.hidden = false;
-    setFeedback(formats[state.format].name + ' response loaded.', 'success');
-    content.scrollIntoView({
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-        block: 'start'
-    });
-}
-
 async function executeRequest(state, newTab = false) {
     if (busy || !validRequest(state)) return;
     sharedRequestType = state.format;
@@ -82,14 +63,15 @@ async function executeRequest(state, newTab = false) {
         let result;
         if (state.format === 'json') {
             const response = await fetchJson(jsonUrl(state));
-            const viewer = new JsonInspector(response?.data === undefined ? response : response.data);
+            const viewer = new JsonInspector(response);
             result = viewer.getContainer();
         } else {
             const properties = liveProperties(state);
             if (state.format === 'liveFull') properties.Type = 'html';
             result = await live.render(state.format === 'liveGranular' ? liveAssets(state) : null, properties, state.language);
         }
-        showResult(result, state);
+        resultPanel.show(result, state);
+        setFeedback(formats[state.format].name + ' response loaded.', 'success');
     } catch (reason) {
         showError(reason);
     } finally {
