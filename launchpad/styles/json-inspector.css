@@ -1,0 +1,40 @@
+/* Only the modern read-only inspector; classic JSONViewer keeps its original styles. */
+.json-inspector { color: var(--ayu-text); min-width: 0; }
+.json-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--ayu-border); }
+.json-inspector .json-button { border: 1px solid var(--ayu-border); border-radius: 5px; background: var(--ayu-raised); color: var(--ayu-text); padding: 6px 10px; width: auto; font: 13px/1.4 system-ui, sans-serif; cursor: pointer; }
+.json-inspector .json-button:hover { background: var(--ayu-hover); }
+.json-inspector .json-button:disabled { opacity: .5; cursor: default; }
+.json-inspector .json-button:focus-visible, .json-search:focus-visible, .json-row:focus-visible, .json-raw:focus-visible { outline: 2px solid var(--ayu-focus); outline-offset: 2px; }
+.json-modes { display: flex; gap: 3px; }
+.json-inspector .json-modes [aria-pressed="true"] { background: var(--ayu-selection); border-color: var(--ayu-accent); color: var(--ayu-heading); }
+.json-inspector .json-search { flex: 1 1 220px; width: auto; min-width: 100px; max-width: 420px; padding: 6px 10px; border: 1px solid var(--ayu-border); border-radius: 5px; background: var(--ayu-surface); color: var(--ayu-text); font: 14px/1.4 system-ui, sans-serif; }
+.json-search::placeholder { color: var(--ayu-muted); opacity: 1; }
+.json-status { color: var(--ayu-muted); font-size: 12px; margin: 10px 0 16px; overflow-wrap: anywhere; }
+.json-tree { font: 13px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.json-item { position: relative; min-width: 0; }
+.json-row { padding: 5px 112px 5px 22px; min-height: 32px; border-radius: 4px; overflow-wrap: anywhere; }
+.json-row:hover { background: var(--ayu-hover); }
+summary.json-row { cursor: pointer; list-style: none; position: relative; }
+summary.json-row::-webkit-details-marker { display: none; }
+summary.json-row::before { content: '›'; position: absolute; left: 5px; color: var(--ayu-muted); }
+.json-branch[open] > summary.json-row::before { transform: rotate(90deg); }
+.json-key { color: var(--ayu-heading); }
+.json-count { color: var(--ayu-muted); font-size: 12px; }
+.json-string { color: var(--ayu-json-string); white-space: pre-wrap; }
+.json-number, .json-boolean { color: var(--ayu-json-number); }
+.json-null { color: var(--ayu-muted); font-style: italic; }
+.json-children { margin-left: 12px; padding-left: 9px; border-left: 1px solid var(--ayu-border); }
+.json-row-actions { position: absolute; right: 4px; top: 3px; display: flex; gap: 4px; opacity: 0; }
+.json-item:hover > .json-row-actions, .json-item:focus-within > .json-row-actions { opacity: 1; }
+.json-inspector .json-row-actions .json-button { font-size: 11px; padding: 3px 6px; }
+.json-inspector .json-match { background: var(--ayu-selection); color: var(--ayu-heading); border-radius: 2px; padding: 0; outline: 1px solid var(--ayu-accent); }
+.json-raw { padding: 16px; margin: 0; border: 1px solid var(--ayu-border); border-radius: 6px; background: var(--ayu-raised); color: var(--ayu-text); font: 13px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; overflow: auto; max-height: 75vh; white-space: pre; tab-size: 2; }
+.json-empty { padding: 24px 8px; color: var(--ayu-muted); }
+.json-copy-buffer { position: fixed; left: -10000px; top: 0; }
+@media (hover: none) { .json-row-actions { opacity: 1; } }
+@media (max-width: 700px) {
+    .json-inspector .json-search { max-width: none; flex-basis: 100%; order: 1; font-size: 16px; }
+    .json-children { margin-left: 5px; padding-left: 5px; }
+    .json-row { padding-right: 100px; }
+    .json-row-actions { opacity: 1; }
+}

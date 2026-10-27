@@ -353,6 +353,13 @@ The current setup assumes **clients connect directly to Apache**. Before placing
 
 **HTTPS is not configured yet.** The site serves HTTP on port 80. For your domain, configure a certificate and TLS in Apache, publish port 443, and allow it in your provider's network settings. Including port 443 in fail2ban rules does not enable HTTPS.
 
+## Frontend dependencies
+
+Both the modern and classic pages use jQuery **4.0.0** (full build, served locally)
+and Bootstrap **5.3.8** (CSS and bundle with Popper from jsDelivr, pinned with SRI).
+The classic layout and request controls are preserved while its dependencies are
+updated alongside the modern page. The classic page keeps its original JSONViewer.
+
 ## Website appearance
 
 The sun/moon button switches between **Ayu Light** and **Ayu Dark** on Launchpad,
@@ -372,6 +379,29 @@ The footer stays at the bottom of short pages and follows the content on longer
 pages without covering it. The copyright year is calculated in the browser.
 Ayu palette attribution and its MIT license are included in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and packaged in the web image.
+
+## JSON response viewer
+
+The modern Launchpad uses a read-only inspector in `launchpad/js/json-inspector.js`
+with Ayu-aware styles in `launchpad/styles/json-inspector.css`. It uses browser
+APIs and adds no third-party dependencies. The classic page keeps JSONViewer.
+
+- **Tree / Raw** switches between a collapsible tree and formatted JSON. Open
+  branches are preserved when switching modes.
+- **Find a key or value** searches the complete displayed payload, including
+  collapsed branches, highlights matches and shows matching branches. Clear the
+  search to browse the full tree again.
+- Each row has **Value** (copies JSON, including string quotes) and **Path**
+  (copies a bracket-notation JSONPath such as `$["Gallery"][0]["Pic"]`). Actions
+  appear on hover or keyboard focus and remain visible on touch devices.
+- **Copy JSON** and **Download** export the entire displayed payload, even while
+  search is active. As before, an Icecat response's `data` member is displayed
+  when present; otherwise the entire response is used.
+- Branch contents render on demand, with up to 100 children per batch. **Show
+  next** reveals further items. The Raw view and exported JSON include all items.
+
+Response strings are inserted as text. Clipboard access falls back to the
+browser's copy command on HTTP; if copying is blocked, select text in Raw.
 
 ## Development tests
 

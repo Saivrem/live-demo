@@ -355,8 +355,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         buildLinkForShare('json');
         beginRequest('Loading JSON. The previous result stays visible until the new response is ready.');
         $.getJSON(link).done(result => {
-            const viewer = new JSONViewer();
-            viewer.showJSON(result.data === undefined ? result : result.data, null, 2);
+            const viewer = new JsonInspector(result.data === undefined ? result : result.data);
             areas.mainContainer.replaceChildren(viewer.getContainer());
             requestSucceeded('JSON response · ' + requestLanguage);
         }).fail(error).always(finishRequest);
