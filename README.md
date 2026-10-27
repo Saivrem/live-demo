@@ -355,10 +355,25 @@ The current setup assumes **clients connect directly to Apache**. Before placing
 
 ## Frontend dependencies
 
-Both the modern and classic pages use jQuery **4.0.0** (full build, served locally)
-and Bootstrap **5.3.8** (CSS and bundle with Popper from jsDelivr, pinned with SRI).
-The classic layout and request controls are preserved while its dependencies are
-updated alongside the modern page. The classic page keeps its original JSONViewer.
+The modern and classic pages use Bootstrap **5.3.8** (CSS and bundle with
+Popper from jsDelivr, pinned with SRI). The modern request UI uses native browser
+APIs and ES modules; no bundler or jQuery is required. The classic page keeps
+jQuery **4.0.0** (full build, served locally) and its original JSONViewer.
+
+### Request UI modules
+
+`launchpad/js/logic.js` is the page controller. Modules under `launchpad/js/request/`
+separate form state and validation (`form.js`, `state.js`), request and shared URLs
+(`links.js`), JSON/language loading (`api.js`), resource navigation (`resources.js`),
+the existing Live renderer and embed snippets (`live.js`, `embed.js`), result
+layout and expansion (`result-panel.js`), and clipboard access (`clipboard.js`). Serve the frontend over HTTP; native modules do not run
+by opening `index.html` directly with a `file:` URL.
+
+The selected response is submitted with the primary button or Enter in a text or
+password field. Missing fields have inline descriptions and keyboard focus moves
+to the first error. A successful embedded response includes a product, language
+and format summary captured when the request was submitted. Editing the form or
+a subsequent failed request does not change the context of the displayed result.
 
 ## Website appearance
 
@@ -380,6 +395,15 @@ pages without covering it. The copyright year is calculated in the browser.
 Ayu palette attribution and its MIT license are included in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and packaged in the web image.
 
+## Working with results
+
+**Expand result** fills the browser viewport with the current JSON or Live result.
+The existing content stays mounted, including the Live gallery. **Exit expanded
+view** or Escape returns to the page and restores focus and the previous scroll
+position. **Back to form** exits expanded view if needed and focuses the primary
+request button. The result header remains visible while scrolling; JSON controls
+stay directly below it. These controls also remain available on narrow screens.
+
 ## JSON response viewer
 
 The modern Launchpad uses a read-only inspector in `launchpad/js/json-inspector.js`
@@ -394,9 +418,15 @@ APIs and adds no third-party dependencies. The classic page keeps JSONViewer.
 - Each row has **Value** (copies JSON, including string quotes) and **Path**
   (copies a bracket-notation JSONPath such as `$["Gallery"][0]["Pic"]`). Actions
   appear on hover or keyboard focus and remain visible on touch devices.
-- **Copy JSON** and **Download** export the entire displayed payload, even while
-  search is active. As before, an Icecat response's `data` member is displayed
-  when present; otherwise the entire response is used.
+- **Payload** switches between **Product data (data)** and **Full API response**,
+  including service fields such as `msg` and any response metadata. The default
+  is `data` when present, including `null`; responses without that member show the
+  full response. Switching makes no new request and preserves each tree's open
+  branches when the search is unchanged. Tree/Raw mode and search are shared
+  between payload views. Field paths are relative to the selected payload.
+- **Copy JSON** and **Download** export the selected payload in full, even while
+  search is active. Downloads are named `icecat-data.json` for data and
+  `icecat-response.json` for the full response.
 - Branch contents render on demand, with up to 100 children per batch. **Show
   next** reveals further items. The Raw view and exported JSON include all items.
 
@@ -404,6 +434,19 @@ Response strings are inserted as text. Clipboard access falls back to the
 browser's copy command on HTTP; if copying is blocked, select text in Raw.
 
 ## Development tests
+
+### Frontend tests without Docker
+
+With Node.js 24, run from the repository root:
+
+```bash
+node --test scripts/test-frontend.mjs
+```
+
+These tests cover active-field validation, reserved characters in request URLs,
+shared-link restoration, content aliases, request summaries, API errors, JSON
+payload selection and executable Live embed snippets. They do not call Icecat or require the backend.
+
 
 ### Java tests without starting the application stack
 
