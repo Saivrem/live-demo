@@ -32,7 +32,7 @@ public class SuppliersController {
         return ResponseEntity.ok().headers(responseHeaders).body(supplierEntities);
     }
 
-    @PostMapping
+    // @PostMapping
     public ResponseEntity<ApiSupplier> createSupplier(@RequestBody ApiSupplier apiSupplier) {
         log.info("Received {}", apiSupplier);
         ApiSupplier created = suppliersService.createSupplier(apiSupplier);
