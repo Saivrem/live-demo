@@ -102,6 +102,12 @@ bash assemble.sh --initial-start
 
 The first run downloads images and dependencies, builds Java, creates the database, and applies migrations. This can take several minutes. The script succeeds when the services are ready; after starting containers, it waits up to 180 seconds for readiness.
 
+On an empty MySQL volume, `docker/mysql/10-flyway.sh` creates the separate
+`FLYWAY_USER` account used for migrations and grants it privileges on `DB_SCHEMA`.
+The MySQL image creates the application account from `DB_USER` separately.
+The initialization script does not run again on an existing database volume;
+changing `FLYWAY_USER` or `FLYWAY_PASSWORD` in `.env` does not update that account.
+
 Available options:
 
 | Command | What it does |
@@ -168,7 +174,18 @@ java -jar icedata-v2/build/libs/icedata-v2-0.1.0-SNAPSHOT.jar --initial-start
 Flyway migrations still run on every normal startup; `--initial-start` controls
 reference data import only. `--initial-start=false` explicitly disables it.
 
-Administrative API access requires the `ICEDATA_ADMIN` authority: this covers `/icedata/api/v2/admin` (including subpaths) and `POST /icedata/api/v2/suppliers`. Spring Security returns `403` without that authority. No users or login flow are configured, and no default user is generated. Administrative writes also require a valid CSRF token. Apache continues to return `404` for admin routes; the retired admin controller remains a `404` stub even after authorization. There is no manual import button. Public read endpoints and uploads remain available without authentication.
+Supplier creation through `POST /icedata/api/v2/suppliers` is disabled: the
+controller's `@PostMapping` is commented out. The security rule remains in place,
+so requests without the `ICEDATA_ADMIN` authority or a valid CSRF token return
+`403`; an authorized request with a valid token reaches Spring MVC and returns
+`405 Method Not Allowed`. `GET /icedata/api/v2/suppliers` remains public.
+
+Administrative routes under `/icedata/api/v2/admin` require `ICEDATA_ADMIN` when
+accessed directly through Spring. Apache returns `404` for these routes; the
+retired admin controller remains a `404` stub even after authorization. No users
+or login flow are configured, and no default user is generated. There is no
+manual import button. Public read endpoints and uploads remain available without
+authentication.
 
 ## Troubleshooting
 
@@ -244,6 +261,7 @@ Within Compose, containers connect using `database:3306` and `java:8086`. Do not
 | --- | --- |
 | `icedata-v2-mysql-volume` | MySQL database |
 | `icedata-v2-uploads-volume` | Uploaded files |
+| `icedata-v2-share-volume` | Generated CSV exports, served read-only by Apache at `/share/` |
 | `apache-logs` | Apache logs |
 | `fail2ban-state` | Fail2ban state |
 
