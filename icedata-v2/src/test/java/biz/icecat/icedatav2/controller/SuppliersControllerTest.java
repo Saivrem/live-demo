@@ -25,7 +25,6 @@ import static biz.icecat.icedatav2.utils.TestUtils.objectMapper;
 import static biz.icecat.icedatav2.utils.TestUtils.objectToJson;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -104,15 +103,14 @@ class SuppliersControllerTest {
 
     @Test
     @WithMockUser(authorities = SecurityConfiguration.ADMIN_AUTHORITY)
-    void shouldCreateSupplierWithAdminAuthority() throws Exception {
-        when(suppliersService.createSupplier(notSponsor)).thenReturn(notSponsor);
+    void shouldRejectSupplierCreationEvenWithAdminAuthority() throws Exception {
 
         mockMvc.perform(post(SUPPLIERS_ENDPOINT).with(csrf())
                         .content(objectToJson(notSponsor))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isMethodNotAllowed());
 
-        verify(suppliersService).createSupplier(notSponsor);
+        verifyNoInteractions(suppliersService);
     }
 
     @Test
