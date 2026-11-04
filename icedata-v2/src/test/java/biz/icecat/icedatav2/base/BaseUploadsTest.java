@@ -22,6 +22,6 @@ public abstract class BaseUploadsTest {
     }
 
     protected MockMultipartFile multipartFile(String filename) {
-        return new MockMultipartFile("files[]", filename, "text/csv", new byte[]{1});
+        return new MockMultipartFile("files[]", filename, "text/csv", "a,b".getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 }

@@ -64,7 +64,7 @@ class UploadsControllerTest extends BaseUploadsTest {
 
     @Test
     void traversalFilenameStaysInsideStorageAndSymlinksAreNotExposed() throws Exception {
-        uploadsService.store(List.of(new MockMultipartFile("files[]", "../../outside.csv", "text/csv", new byte[]{1})));
+        uploadsService.store(List.of(multipartFile("../../outside.csv")));
         assertThat(uploadsService.list()).singleElement().satisfies(upload -> assertThat(upload.getName()).isEqualTo("outside.csv"));
         String linkName = "00000000-0000-0000-0000-000000000000-secret.csv";
         Files.createSymbolicLink(directory.resolve(linkName), directory.resolve("../secret.csv"));
@@ -75,7 +75,7 @@ class UploadsControllerTest extends BaseUploadsTest {
 
     @Test
     void cleanupDeletesUploadsButKeepsOtherFiles() throws Exception {
-        uploadsService.store(List.of(new MockMultipartFile("files[]", "test.docx", "application/octet-stream", new byte[]{1})));
+        uploadsService.store(List.of(multipartFile("test.csv")));
         Files.writeString(directory.resolve("keep.txt"), "keep");
         uploadsService.cleanup();
         assertThat(uploadsService.list()).isEmpty();

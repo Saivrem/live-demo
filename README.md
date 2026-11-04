@@ -284,7 +284,11 @@ Outside Docker, the output directory defaults to `share/` and can be set with `S
 
 ## File uploads
 
-The upload listing is available at `/uploads/`. Java accepts nonempty `csv`, `xls`, `xlsx`, `docx`, and `doc` files, up to **20 MiB per file** and **100 MiB per multipart request**. Stored files receive unique names and are downloaded as attachments.
+The upload listing is available at `/uploads/`. Java accepts nonempty `csv`, `xls`, `xlsx`, `docx`, and `doc` files, up to **20 MiB per file** and **100 MiB per multipart request**. The Java service limits the upload directory to **5 GiB** of regular-file contents. It counts existing files and the entire incoming batch. A batch that would exceed the quota receives HTTP 507.
+
+CSV uploads must be UTF-8 tables with at least two columns, consistent row widths, and comma, semicolon or tab separators. Quoted fields may contain line breaks. Office uploads are checked against their internal Word or Excel format. For DOCX and XLSX, the package is limited to 1,000 entries and 128 MiB of declared uncompressed content. The parser also limits each entry it reads to 64 MiB. Invalid content rejects the entire batch with HTTP 400. Format checks do not scan for malware or macros.
+
+Stored files receive unique names, have owner-only read/write permissions on the Linux volume, and are downloaded as attachments.
 
 **Files are public and deleted daily at 00:00 UTC**, including files uploaded shortly before midnight. This feature is intended for temporary file sharing.
 

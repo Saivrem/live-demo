@@ -12,6 +12,10 @@ import org.springframework.web.util.UriUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.FileVisitResult;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -26,6 +30,7 @@ import java.util.stream.Stream;
 public class DefaultUploadsService implements UploadsService {
 
     private static final long MAX_FILE_SIZE_BYTES = 20L * 1024 * 1024;
+    private static final long MAX_DIRECTORY_BYTES = 5L * 1024 * 1024 * 1024;
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("csv", "xls", "xlsx", "docx", "doc");
     private static final int MAX_FILENAME_BYTES = 180;
     private static final int STORED_FILENAME_PREFIX_LENGTH = 37;
@@ -35,11 +40,17 @@ public class DefaultUploadsService implements UploadsService {
     public DefaultUploadsService(@Value("${uploads.directory:uploads}") String directoryPath) throws IOException {
         this.uploadDirectory = Path.of(directoryPath).toAbsolutePath().normalize();
         Files.createDirectories(this.uploadDirectory);
+        try (Stream<Path> paths = Files.list(uploadDirectory)) {
+            for (Path existing : paths.filter(this::isUpload).toList()) {
+                restrictPermissions(existing);
+            }
+        }
     }
 
     @Override
     public synchronized List<ApiUpload> store(List<MultipartFile> files) throws IOException {
         List<String> filenames = validateFiles(files);
+        checkCapacity(files);
         List<Path> storedFiles = new ArrayList<>();
 
         try {
@@ -133,11 +144,46 @@ public class DefaultUploadsService implements UploadsService {
         return filename;
     }
 
+    private void checkCapacity(List<MultipartFile> files) throws IOException {
+        long requested = files.stream().mapToLong(MultipartFile::getSize).sum();
+        Files.walkFileTree(uploadDirectory, new SimpleFileVisitor<>() {
+            private long remaining = MAX_DIRECTORY_BYTES - requested;
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
+                ensureCapacity();
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                if (attributes.isRegularFile()) {
+                    remaining -= attributes.size();
+                    ensureCapacity();
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            private void ensureCapacity() {
+                if (remaining < 0) {
+                    throw new ResponseStatusException(HttpStatus.INSUFFICIENT_STORAGE,
+                            "Upload directory limit of 5 GiB exceeded.");
+                }
+            }
+        });
+    }
+
+    private void restrictPermissions(Path path) throws IOException {
+        Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rw-------"));
+    }
+
     private void saveFile(MultipartFile file, Path storedFile) throws IOException {
         // Publish the file only after its transfer has completed.
         Path temporaryFile = Files.createTempFile(uploadDirectory, ".upload-", ".tmp");
         try {
             file.transferTo(temporaryFile);
+            restrictPermissions(temporaryFile);
+            UploadContentValidator.validate(temporaryFile, storedFile.getFileName().toString());
             Files.move(temporaryFile, storedFile);
         } finally {
             Files.deleteIfExists(temporaryFile);
