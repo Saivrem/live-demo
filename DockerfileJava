@@ -1,5 +1,9 @@
-FROM amazoncorretto:17 AS build
-RUN yum install -y findutils && yum clean all
+# Corretto 25.0.5.1.2 fixes CVE-2026-114938 (Java4Shell).
+FROM amazoncorretto:25.0.5-al2023@sha256:8b82be5adeabd374f5438e90635a120868e07ea8e85be6b691eb1c994d53f1e2 AS java-base
+RUN test "$(rpm -q --qf '%{VERSION}' java-25-amazon-corretto-headless)" = "25.0.5.1.2"
+
+FROM java-base AS build
+RUN dnf install -y findutils && dnf clean all
 WORKDIR /build
 COPY icedata-v2/gradlew icedata-v2/settings.gradle icedata-v2/build.gradle icedata-v2/version.gradle icedata-v2/version.properties ./
 COPY icedata-v2/gradle/ gradle/
@@ -11,7 +15,7 @@ FROM build AS test
 ENTRYPOINT ["./gradlew", "--no-daemon"]
 CMD ["test", "jacocoTestReport"]
 
-FROM amazoncorretto:17
+FROM java-base
 RUN curl --version
 WORKDIR /opt/app
 COPY --from=build /build/app.jar /opt/app/app.jar

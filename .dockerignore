@@ -12,3 +12,6 @@ icedata-v2/out
 icedata-v2/tmp
 icedata-v2/uploads
 icedata-v2/src/main/resources/application-local.yml
+
+# Local tooling and scratch files are not build inputs.
+tmp/
