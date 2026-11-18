@@ -472,7 +472,7 @@ payload selection and executable Live embed snippets. They do not call Icecat or
 
 ### Java tests without starting the application stack
 
-You need a local JDK 17 and a running Docker Engine:
+You need a local JDK 25 (Corretto 25.0.5.1.2 or a newer patched Java 25 build) and a running Docker Engine:
 
 ```bash
 cd icedata-v2
@@ -524,9 +524,29 @@ The [Java and Docker CI](.github/workflows/gradle.yml) workflow runs on pushes t
 
 It runs two independent checks:
 
-- **Java tests and build** — Java 17, Gradle wrapper validation, tests with disposable MySQL, coverage reports, and JAR packaging.
+- **Java tests and build** — Corretto 25.0.5.1.2, Gradle wrapper validation, tests with disposable MySQL, coverage reports, and JAR packaging.
 - **Docker stack and fail2ban** — temporary `.env` generation, Compose validation, three image builds, an isolated test stack, and HTTP ban/unban checks.
 
 These checks require no GitHub Secrets. Import tests use local fixtures, not a real Icecat account. The workflow validates the build; it does not publish images or deploy to your VM.
 
 The completed run's **Artifacts** section contains `java-test-reports` and `docker-test-logs`, retained for 14 days. Upload steps also run after failures; a report may be absent if the build failed before creating it. In the Java report archive, open `reports/tests/test/index.html` or `reports/jacoco/test/html/index.html`.
+
+### Java4Shell runtime update
+
+The Java image pins Corretto 25.0.5.1.2 by image digest and verifies the installed
+RPM version in both build and runtime stages. This release fixes CVE-2026-114938.
+Spring Boot 4.1.2 manages runtime libraries, including Tomcat 11.0.27; Gradle 9.9.1
+and JaCoCo 0.8.16 support Java 25. POI remains at 6.0.0 and Testcontainers at
+1.21.4 (the existing 1.x API); neither requires a major migration for this fix.
+
+After merging, rebuild and recreate the Java service; restarting an old container
+does not replace its JVM:
+
+```bash
+docker compose build --pull java
+docker compose up -d --no-deps java
+docker compose exec java java -version
+```
+
+Confirm Corretto 25.0.5.1.2 in the running container and check API readiness.
+Reference: [Corretto 25 release](https://github.com/corretto/corretto-25/releases/tag/25.0.5.1.2).
